@@ -1,0 +1,25 @@
+*{
+    margin: auto;
+}
+background{
+    background-color: black;
+}
+h1{
+    color:white;
+}
+a{
+    color: white;
+    text-decoration: none;
+}
+.menu{
+    display: flex;
+    background-color: blue;
+    height: 10vh;
+    width: 100vw;
+    justify-content: center;
+    align-items: center;
+}
+.menus{
+    display: flex;
+    flex-direction: column;
+}

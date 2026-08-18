@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../static/styles/orcamento.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="menu">
+        <h1><a href="{{ url_for('Home') }}">Sistema RGS(redutor de gargalo Squadro)</a></h1><!--Nome do projeto-->
+    </div>
+    <div class="menus">
+        <h1>calculador de preço</h1>
+        <div class="calcularPrecoText">
+            <h2>quantidade</h2>
+            <h2>tipo de material</h2>
+        </div>
+        <div class="calcularPrecoInput">
+            <input type="text" name="" id="">
+            <select name="" id="">
+                <option value="a">a</option>
+                <option value="b">b</option>
+                <option value="c">c</option>
+            </select>
+            <button>calcular</button><!--js chamar func api-->
+        </div>
+        <div class="PrecoCalculado">
+            <h1>Preço calculado: </h1>
+        </div>
+    </div>
+</body>
+</html>

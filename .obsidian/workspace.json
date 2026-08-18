@@ -1,0 +1,249 @@
+{
+  "main": {
+    "id": "ec95678b3a8928ce",
+    "type": "split",
+    "children": [
+      {
+        "id": "065c7633c0d7403e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e6ac4a6f26be42dc",
+            "type": "leaf",
+            "state": {
+              "type": "excalidraw",
+              "state": {
+                "file": "Excalidraw/Drawing 2026-08-10 21.44.33.excalidraw.md"
+              },
+              "icon": "excalidraw-icon",
+              "title": "Drawing 2026-08-10 21.44.33.excalidraw"
+            }
+          },
+          {
+            "id": "c88e52e6c76cbf4f",
+            "type": "leaf",
+            "state": {
+              "type": "excalidraw",
+              "state": {
+                "file": "Excalidraw/Drawing 2026-08-17 19.52.53.excalidraw.md"
+              },
+              "icon": "excalidraw-icon",
+              "title": "Drawing 2026-08-17 19.52.53.excalidraw"
+            }
+          },
+          {
+            "id": "f5d98ead0a48a6d8",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "Nova aba"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "c1c6a17d805e6552",
+    "type": "split",
+    "children": [
+      {
+        "id": "9bbf0b3938e35107",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3f5c3207bf4467a0",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Explorador de arquivos"
+            }
+          },
+          {
+            "id": "cc70ffdbb8b22ec6",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Procurar"
+            }
+          },
+          {
+            "id": "511af98cc6b994d4",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Marcadores"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 200,
+    "collapsed": true
+  },
+  "right": {
+    "id": "f10b78715f503151",
+    "type": "split",
+    "children": [
+      {
+        "id": "399108dd84ab770c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9b0059635c877e72",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Excalidraw/ideias_sistema.excalidraw.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Links inversos"
+            }
+          },
+          {
+            "id": "8989344722550e13",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Excalidraw/ideias_sistema.excalidraw.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Links de saída"
+            }
+          },
+          {
+            "id": "30c6c0691a18bdc6",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Etiquetas"
+            }
+          },
+          {
+            "id": "556db11b385ac90f",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Todas as propriedades"
+            }
+          },
+          {
+            "id": "a68531d146d8331e",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Excalidraw/ideias_sistema.excalidraw.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Sumário"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Abrir a troca rápida": false,
+      "graph:Abrir visualização em gráfico": false,
+      "canvas:Criar novo canvas": false,
+      "daily-notes:Abrir a nota de hoje": false,
+      "templates:Inserir modelo": false,
+      "command-palette:Abrir paleta de comandos": false,
+      "bases:Criar nova base": false,
+      "obsidian-excalidraw-plugin:New drawing": false
+    }
+  },
+  "active": "e6ac4a6f26be42dc",
+  "lastOpenFiles": [
+    "src/dbtest.db",
+    "src/dbtest copy.db",
+    "dbtest.db-journal",
+    "dbtest.db",
+    "src/__pycache__/db.cpython-313.pyc",
+    "src/static/styles/orcamento.css",
+    "Excalidraw/Drawing 2026-08-17 19.52.53.excalidraw.md",
+    "src/static/styles/index.css",
+    "src/templates/index.css",
+    "src/templates/ControleOrcamento.html",
+    "src/__pycache__/app.cpython-313.pyc",
+    "src/__pycache__",
+    "Excalidraw/Drawing 2026-08-10 21.44.33.excalidraw.md",
+    "tentativa de fazer a reversão do processo.md",
+    "fluxo_squadro_provavel.png",
+    "Ideias.md",
+    "seguidor/robotica.md",
+    "seguidor/Pasted image 20260817192401.png",
+    "seguidor/Pasted image 20260817191529.png",
+    "seguidor/Pasted image 20260817185322.png",
+    "seguidor/Pasted image 20260817183851.png",
+    "seguidor/Pasted image 20260817183720.png",
+    "seguidor/Pasted image 20260817183500.png",
+    "seguidor/Pasted image 20260817183436.png",
+    "readme.md",
+    "Anotações aleatórias.md",
+    "prompt agilizar pesquisa.md",
+    "Excalidraw/ideias_sistema.excalidraw.md",
+    "Excalidraw/Drawing 2026-08-03 19.34.20.excalidraw.md",
+    "Drawing 2026-08-03 19.32.12.excalidraw.md",
+    "Drawing 2026-08-03 19.31.29.excalidraw.md",
+    "Drawing 2026-08-03 19.30.13.excalidraw.md",
+    "Excalidraw/Drawing 2026-07-31 21.59.58.excalidraw.md"
+  ]
+}
