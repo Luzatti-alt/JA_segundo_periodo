@@ -28,7 +28,8 @@ def Test():
 #endregion cliente
 @app.route("/Orcamento")#home page
 def Orcamento():
-    return render_template("Orcamento.html")
+    materiais = session.query(Materiais).all()
+    return render_template("Orcamento.html", Materiais=materiais)
 
 @app.route("/ControleOrcamento")#home page
 def ControleOrcamento():
