@@ -4,35 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "065c7633c0d7403e",
+        "id": "deceaa2df2038fad",
         "type": "tabs",
         "children": [
           {
-            "id": "e6ac4a6f26be42dc",
-            "type": "leaf",
-            "state": {
-              "type": "excalidraw",
-              "state": {
-                "file": "Excalidraw/Drawing 2026-08-10 21.44.33.excalidraw.md"
-              },
-              "icon": "excalidraw-icon",
-              "title": "Drawing 2026-08-10 21.44.33.excalidraw"
-            }
-          },
-          {
-            "id": "c88e52e6c76cbf4f",
-            "type": "leaf",
-            "state": {
-              "type": "excalidraw",
-              "state": {
-                "file": "Excalidraw/Drawing 2026-08-17 19.52.53.excalidraw.md"
-              },
-              "icon": "excalidraw-icon",
-              "title": "Drawing 2026-08-17 19.52.53.excalidraw"
-            }
-          },
-          {
-            "id": "f5d98ead0a48a6d8",
+            "id": "ed8fa6d576bd8206",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -103,8 +79,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200,
-    "collapsed": true
+    "width": 200
   },
   "right": {
     "id": "f10b78715f503151",
@@ -210,8 +185,18 @@
       "obsidian-excalidraw-plugin:New drawing": false
     }
   },
-  "active": "e6ac4a6f26be42dc",
+  "active": "3f5c3207bf4467a0",
   "lastOpenFiles": [
+    "Ideias desafio jornada.md",
+    "Ideias e pesquisa.md",
+    "informações usadas para a rescirta.md",
+    "DESAFIO-RENAULT-2º-Eng-Mecânica-e-2º-Eng-Mecatrônica.md",
+    "Excalidraw/fluxo_api.md",
+    "Ideias.md",
+    "tentativa de fazer a reversão do processo.md",
+    "reescrita (parte de tec e sis) (jogar partes para agilizar a ideia de como introduzir).md",
+    "fluxo_squadro_provavel.png",
+    "Excalidraw/Fluxo_ideia_melhoria.excalidraw.md",
     "Excalidraw/Drawing 2026-08-17 19.52.53.excalidraw.md",
     "Excalidraw/Drawing 2026-08-10 21.44.33.excalidraw.md",
     "src/dbtest.db",
@@ -224,9 +209,6 @@
     "src/templates/index.css",
     "src/templates/ControleOrcamento.html",
     "src/__pycache__/app.cpython-313.pyc",
-    "tentativa de fazer a reversão do processo.md",
-    "fluxo_squadro_provavel.png",
-    "Ideias.md",
     "seguidor/robotica.md",
     "seguidor/Pasted image 20260817192401.png",
     "seguidor/Pasted image 20260817191529.png",
