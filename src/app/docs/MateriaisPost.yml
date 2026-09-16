@@ -1,0 +1,25 @@
+summary: Criar material
+description: Cadastra um material associado a um veículo.
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  - in: body
+    name: body
+    required: true
+    schema:
+      type: object
+      properties:
+        veiculo_id:
+          type: integer
+        categoria:
+          type: string
+        peso_kg:
+          type: number
+          format: float
+responses:
+  201:
+    description: Material criado com sucesso.
+  400:
+    description: Erro ao criar material.

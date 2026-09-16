@@ -1,0 +1,32 @@
+summary: Listar Destinacao
+description: Retorna todos os registros de Destinacao.
+produces:
+  - application/json
+responses:
+  200:
+    description: Lista de registros retornada com sucesso.
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          veiculo_id:
+            type: integer
+          material_id:
+            type: integer
+          cenario:
+            type: string
+          pct_reciclagem:
+            type: number
+            format: float
+          pct_reuso:
+            type: number
+            format: float
+          pct_valorizacao:
+            type: number
+            format: float
+          pct_disposicao:
+            type: number
+            format: float

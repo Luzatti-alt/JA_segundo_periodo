@@ -1,0 +1,25 @@
+summary: Listar DadoAtividade
+description: Retorna todos os registros de DadoAtividade.
+produces:
+  - application/json
+responses:
+  200:
+    description: Lista de registros retornada com sucesso.
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          veiculo_id:
+            type: integer
+          cenario:
+            type: string
+          processo:
+            type: string
+          valor:
+            type: number
+            format: float
+          unidade:
+            type: string

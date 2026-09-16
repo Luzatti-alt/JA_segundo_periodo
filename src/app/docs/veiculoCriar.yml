@@ -1,0 +1,36 @@
+summary: Criar veículo
+description: Cadastra um veículo no sistema.
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  - in: body
+    name: body
+    required: true
+    schema:
+      type: object
+      properties:
+        categoria:
+          type: string
+        motorizacao:
+          type: string
+        combustivel:
+          type: string
+        massa_total_kg:
+          type: number
+          format: float
+        vida_util_anos:
+          type: number
+          format: float
+        quilometragem_km:
+          type: number
+          format: float
+        estado:
+          type: string
+          default: Fim de vida
+responses:
+  201:
+    description: Veículo criado com sucesso.
+  400:
+    description: Erro ao criar veículo.

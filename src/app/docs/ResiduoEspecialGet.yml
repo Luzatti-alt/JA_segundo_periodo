@@ -1,0 +1,25 @@
+summary: Listar ResiduoEspecial
+description: Retorna todos os registros de ResiduoEspecial.
+produces:
+  - application/json
+responses:
+  200:
+    description: Lista de registros retornada com sucesso.
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          veiculo_id:
+            type: integer
+          nome:
+            type: string
+          quantidade:
+            type: number
+            format: float
+          unidade:
+            type: string
+          destino:
+            type: string

@@ -1,0 +1,12 @@
+# Swagger/OpenAPI documentation for the web interface.
+# The Flask route currently only renders index.html.
+
+summary: Interface web
+description: Interface principal da aplicação.
+responses:
+  200:
+    description: Página inicial da aplicação.
+    content:
+      text/html:
+        schema:
+          type: string

@@ -1,0 +1,29 @@
+summary: Listar ResultadoCalculo
+description: Retorna todos os registros de ResultadoCalculo.
+produces:
+  - application/json
+responses:
+  200:
+    description: Lista de registros retornada com sucesso.
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          veiculo_id:
+            type: integer
+          cenario:
+            type: string
+          etapa:
+            type: string
+          emissao_kgco2e:
+            type: number
+            format: float
+          participacao_pct:
+            type: number
+            format: float
+          evitado_kgco2e:
+            type: number
+            format: float

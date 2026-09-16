@@ -1,0 +1,31 @@
+summary: Listar Veiculo
+description: Retorna todos os registros de Veiculo.
+produces:
+  - application/json
+responses:
+  200:
+    description: Lista de registros retornada com sucesso.
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          categoria:
+            type: string
+          motorizacao:
+            type: string
+          combustivel:
+            type: string
+          massa_total_kg:
+            type: number
+            format: float
+          vida_util_anos:
+            type: number
+            format: float
+          quilometragem_km:
+            type: number
+            format: float
+          estado:
+            type: string

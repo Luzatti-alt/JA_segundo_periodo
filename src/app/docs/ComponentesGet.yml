@@ -1,0 +1,21 @@
+summary: Listar Componentes
+description: Retorna todos os registros de Componentes.
+produces:
+  - application/json
+responses:
+  200:
+    description: Lista de registros retornada com sucesso.
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          veiculo_id:
+            type: integer
+          categoria:
+            type: string
+          peso_kg:
+            type: number
+            format: float

@@ -1,0 +1,30 @@
+summary: Criar dado de atividade
+description: Cadastra um dado de atividade de um processo.
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  - in: body
+    name: body
+    required: true
+    schema:
+      type: object
+      properties:
+        veiculo_id:
+          type: integer
+        cenario:
+          type: string
+          default: base
+        processo:
+          type: string
+        valor:
+          type: number
+          format: float
+        unidade:
+          type: string
+responses:
+  201:
+    description: Dado de atividade criado com sucesso.
+  400:
+    description: Erro ao criar dado de atividade.

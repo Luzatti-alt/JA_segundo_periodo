@@ -1,0 +1,30 @@
+summary: Criar fator de emissão
+description: Cadastra um fator de emissão, podendo ser genérico quando material_id não for informado.
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  - in: body
+    name: body
+    required: true
+    schema:
+      type: object
+      properties:
+        material_id:
+          type: integer
+          nullable: true
+        processo:
+          type: string
+        valor:
+          type: number
+          format: float
+        unidade:
+          type: string
+        origem:
+          type: string
+responses:
+  201:
+    description: Fator de emissão criado com sucesso.
+  400:
+    description: Erro ao criar fator de emissão.

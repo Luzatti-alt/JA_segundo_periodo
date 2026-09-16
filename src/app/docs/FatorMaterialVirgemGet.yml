@@ -1,0 +1,22 @@
+summary: Listar FatorMaterialVirgem
+description: Retorna todos os registros de FatorMaterialVirgem.
+produces:
+  - application/json
+responses:
+  200:
+    description: Lista de registros retornada com sucesso.
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          material_id:
+            type: integer
+          fe_virgem:
+            type: number
+            format: float
+          fd:
+            type: number
+            format: float

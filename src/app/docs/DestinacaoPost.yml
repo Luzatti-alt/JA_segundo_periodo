@@ -1,0 +1,41 @@
+summary: Criar destinação
+description: Cadastra a destinação de um material.
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  - in: body
+    name: body
+    required: true
+    schema:
+      type: object
+      properties:
+        veiculo_id:
+          type: integer
+        material_id:
+          type: integer
+        cenario:
+          type: string
+          default: base
+        pct_reciclagem:
+          type: number
+          format: float
+          default: 0.0
+        pct_reuso:
+          type: number
+          format: float
+          default: 0.0
+        pct_valorizacao:
+          type: number
+          format: float
+          default: 0.0
+        pct_disposicao:
+          type: number
+          format: float
+          default: 0.0
+responses:
+  201:
+    description: Destinação criada com sucesso.
+  400:
+    description: Erro ao criar destinação.

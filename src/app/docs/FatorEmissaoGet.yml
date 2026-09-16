@@ -1,0 +1,25 @@
+summary: Listar FatorEmissao
+description: Retorna todos os registros de FatorEmissao.
+produces:
+  - application/json
+responses:
+  200:
+    description: Lista de registros retornada com sucesso.
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          material_id:
+            type: integer
+          processo:
+            type: string
+          valor:
+            type: number
+            format: float
+          unidade:
+            type: string
+          origem:
+            type: string
