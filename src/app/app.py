@@ -42,7 +42,6 @@ def Home():
 	return render_template("index.html")#retornar o arquivo html de home
 #endregion Interface
 
-
 #region DadosJsonPost
 
 #region AddDados
