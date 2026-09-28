@@ -39,7 +39,15 @@ def get_session():
 #interface farei dps
 @app.route("/", methods=["GET"])#home page
 def Home():
-	return render_template("index.html")#retornar o arquivo html de home
+	return render_template("index.html")
+
+@app.route("/Dados", methods=['GET'])
+def Dados():
+    return render_template("DadosDb.html")
+
+@app.route("/Calculo", methods=["GET"])
+def Calculo():
+    return render_template("Calculo.html")
 #endregion Interface
 
 #region DadosJsonPost
@@ -59,7 +67,7 @@ def criar_veiculo():
             MassaTotal=dados.get("massa_total_kg"),
             VidaUtilAnos=dados.get("vida_util_anos"),
             Quilometragem=dados.get("quilometragem_km"),
-            Estado=dados.get("estado", "Fim de vida"),
+            Estado=dados.get("estado") or "Fim de vida",
         )
         session.add(veiculo)
         session.commit()
@@ -525,6 +533,128 @@ def listar_resultados_calculo():
     return jsonify(ListaResultados)
 
 #endregion DadosJsonGET
+
+#region EditarRemoverDados
+# chave do JSON -> atributo do modelo (usado no PUT)
+CAMPOS_EDITAVEIS = {
+    Veiculo: {
+        "categoria": "Categoria",
+        "motorizacao": "Motorizacao",
+        "combustivel": "Combustivel",
+        "massa_total_kg": "MassaTotal",
+        "vida_util_anos": "VidaUtilAnos",
+        "quilometragem_km": "Quilometragem",
+        "estado": "Estado",
+    },
+    Componentes: {"veiculo_id": "veiculo_id", "categoria": "Categoria", "peso_kg": "Peso"},
+    Materiais: {"veiculo_id": "veiculo_id", "categoria": "Categoria", "peso_kg": "Peso"},
+}
+
+
+def editar_registro(modelo, id):
+    """Atualiza só os campos enviados no JSON."""
+    session = get_session()
+    dados = request.get_json()
+    try:
+        registro = session.get(modelo, id)
+        if registro is None:
+            return jsonify({"erro": f"{modelo.__name__} {id} não encontrado"}), 404
+        campos = CAMPOS_EDITAVEIS[modelo]
+        for chave, atributo in campos.items():
+            if chave in dados:
+                setattr(registro, atributo, dados[chave])
+        session.commit()
+        resultado = {"id": registro.id}
+        resultado.update({chave: getattr(registro, atributo) for chave, atributo in campos.items()})
+        return jsonify(resultado)
+    except Exception as e:
+        session.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        session.close()
+
+
+def apagar_dependencias_de_materiais(session, ids_materiais):
+    # o SQLite não aplica as chaves estrangeiras sozinho, então apagamos os filhos na mão
+    if not ids_materiais:
+        return
+    session.query(Destinacao).filter(Destinacao.material_id.in_(ids_materiais)).delete(synchronize_session=False)
+    session.query(FatorEmissao).filter(FatorEmissao.material_id.in_(ids_materiais)).delete(synchronize_session=False)
+    session.query(FatorMaterialVirgem).filter(FatorMaterialVirgem.material_id.in_(ids_materiais)).delete(synchronize_session=False)
+
+
+@app.route("/Veiculo/<int:id>", methods=["PUT"])
+def editar_veiculo(id):
+    return editar_registro(Veiculo, id)
+
+
+@app.route("/Componentes/<int:id>", methods=["PUT"])
+def editar_componente(id):
+    return editar_registro(Componentes, id)
+
+
+@app.route("/Materiais/<int:id>", methods=["PUT"])
+def editar_material(id):
+    return editar_registro(Materiais, id)
+
+
+@app.route("/Veiculo/<int:id>", methods=["DELETE"])
+def remover_veiculo(id):
+    session = get_session()
+    try:
+        if session.get(Veiculo, id) is None:
+            return jsonify({"erro": f"Veiculo {id} não encontrado"}), 404
+        ids_materiais = [m.id for m in session.query(Materiais.id).filter(Materiais.veiculo_id == id)]
+        apagar_dependencias_de_materiais(session, ids_materiais)
+        session.query(Destinacao).filter(Destinacao.veiculo_id == id).delete(synchronize_session=False)
+        session.query(Materiais).filter(Materiais.veiculo_id == id).delete(synchronize_session=False)
+        session.query(Componentes).filter(Componentes.veiculo_id == id).delete(synchronize_session=False)
+        session.query(ResiduoEspecial).filter(ResiduoEspecial.veiculo_id == id).delete(synchronize_session=False)
+        session.query(DadoAtividade).filter(DadoAtividade.veiculo_id == id).delete(synchronize_session=False)
+        session.query(ResultadoCalculo).filter(ResultadoCalculo.veiculo_id == id).delete(synchronize_session=False)
+        session.query(Veiculo).filter(Veiculo.id == id).delete(synchronize_session=False)
+        session.commit()
+        return jsonify({"removido": id})
+    except Exception as e:
+        session.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        session.close()
+
+
+@app.route("/Componentes/<int:id>", methods=["DELETE"])
+def remover_componente(id):
+    session = get_session()
+    try:
+        if session.get(Componentes, id) is None:
+            return jsonify({"erro": f"Componentes {id} não encontrado"}), 404
+        session.query(Componentes).filter(Componentes.id == id).delete(synchronize_session=False)
+        session.commit()
+        return jsonify({"removido": id})
+    except Exception as e:
+        session.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        session.close()
+
+
+@app.route("/Materiais/<int:id>", methods=["DELETE"])
+def remover_material(id):
+    session = get_session()
+    try:
+        if session.get(Materiais, id) is None:
+            return jsonify({"erro": f"Materiais {id} não encontrado"}), 404
+        apagar_dependencias_de_materiais(session, [id])
+        session.query(Materiais).filter(Materiais.id == id).delete(synchronize_session=False)
+        session.commit()
+        return jsonify({"removido": id})
+    except Exception as e:
+        session.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        session.close()
+
+#endregion EditarRemoverDados
 
 #region rodar
 app.run(host="0.0.0.0",port=5000)

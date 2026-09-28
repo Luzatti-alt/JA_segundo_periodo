@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dados do banco</title>
+    <link rel="stylesheet" href="../static/styles/index.css">
+    <link rel="stylesheet" href="../static/styles/paginas.css">
+    <script src="../static/scripts/DB.js" defer></script>
+</head>
+<body>
+    <header><h1>Software pegada de carbono</h1></header>
+    <nav>
+        <a href="{{url_for('Home')}}">Início</a>
+        <a href="{{url_for('Dados')}}" aria-current="page">Dados</a>
+        <a href="{{url_for('Calculo')}}">Cálculo</a>
+    </nav>
+    <main>
+        <section>
+            <h2>Veículos</h2>
+            <div class="Tabela"><table data-rota="/Veiculo"></table></div>
+        </section>
+        <section>
+            <h2>Componentes</h2>
+            <div class="Tabela"><table data-rota="/Componentes"></table></div>
+        </section>
+        <section>
+            <h2>Materiais</h2>
+
+            <div class="Tabela"><table data-rota="/Materiais"></table></div>
+        </section>
+        <p class="Aviso" id="erroDados" hidden></p>
+    </main>
+</body>
+</html>

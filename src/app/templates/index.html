@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Software pegada de carbono</title>
     <link rel="stylesheet" href="../static/styles/index.css">
+    <script src="../static/scripts/index.js" defer></script>
 </head>
 <body>
     <header>
@@ -14,27 +15,116 @@
         <h1>Controle de dados</h1>
         <div class="ControleDB">
             <div class="Veiculo">
-                <button>Adicionar veiculo ao banco de dados</button>
-                <button>editar veiculo do banco de dados</button>
-                <button>remover veiculo ao banco de dados</button>
+                <button data-acao="adicionar" data-entidade="veiculo">Adicionar veículo ao banco de dados</button>
+                <button data-acao="editar" data-entidade="veiculo">Editar veículo do banco de dados</button>
+                <button data-acao="remover" data-entidade="veiculo">Remover veículo do banco de dados</button>
             </div>
             <div class="Componentes">
-                <button>Adicionar componente ao banco de dados</button>
-                <button>editar componente do banco de dados</button>
-                <button>remover componente ao banco de dados</button>
+                <button data-acao="adicionar" data-entidade="componentes">Adicionar componente ao banco de dados</button>
+                <button data-acao="editar" data-entidade="componentes">Editar componente do banco de dados</button>
+                <button data-acao="remover" data-entidade="componentes">Remover componente do banco de dados</button>
             </div>
             <div class="Material">
-                <button>Adicionar Material ao banco de dados</button>
-                <button>editar Material do banco de dados</button>
-                <button>remover Material ao banco de dados</button>
+                <button data-acao="adicionar" data-entidade="materiais">Adicionar material ao banco de dados</button>
+                <button data-acao="editar" data-entidade="materiais">Editar material do banco de dados</button>
+                <button data-acao="remover" data-entidade="materiais">Remover material do banco de dados</button>
             </div>
         </div>
-        
-    <h1>Calculos</h1>
 
-    <div class="Calcs">
-        <button>Calcular Pegada Carbono</button>
-    </div>
+        <h1>Informações e cálculos</h1>
+
+        <div class="Calcs">
+            <button><a href="{{url_for('Calculo')}}">Calcular Pegada Carbono</a></button>
+            <button><a href="{{url_for('Dados')}}">Ver Dados</a></button><!--html so para demonstrar os dados do db-->
+        
+        </div>
     </main>
+
+    <!-- Modal único: o JS mostra só a seção da entidade escolhida -->
+    <div class="modal" id="modal" hidden>
+        <div class="Modal_Conteudo" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+            <div class="ModalCabecalho">
+                <h2 id="modalTitulo"></h2>
+                <button type="button" class="ModalFechar" data-fechar aria-label="Fechar">&times;</button>
+            </div>
+
+            <form id="modalForm">
+                <!-- Aparece só em editar/remover -->
+                <label class="ModalSeletor" id="modalSeletor" hidden>
+                    Registro
+                    <select id="seletorRegistro"></select>
+                </label>
+
+                <!-- Os names dos campos são iguais às chaves do JSON da API -->
+                <fieldset class="ModalVeiculo" data-entidade="veiculo" hidden disabled>
+                    <label>Categoria
+                        <input name="categoria" placeholder="Veículo compacto de passeio" required>
+                    </label>
+                    <label>Motorização
+                        <input name="motorizacao" list="listaMotorizacao" placeholder="Combustão interna" required>
+                    </label>
+                    <label>Combustível
+                        <input name="combustivel" list="listaCombustivel" placeholder="Flex">
+                    </label>
+                    <label>Massa total (kg)
+                        <input type="number" name="massa_total_kg" min="0" step="any" required>
+                    </label>
+                    <label>Vida útil (anos)
+                        <input type="number" name="vida_util_anos" min="0" step="1">
+                    </label>
+                    <label>Quilometragem (km)
+                        <input type="number" name="quilometragem_km" min="0" step="any">
+                    </label>
+                    <label>Estado
+                        <input name="estado" value="Fim de vida">
+                    </label>
+                </fieldset>
+
+                <fieldset class="ModalComponentes" data-entidade="componentes" hidden disabled>
+                    <label>Veículo
+                        <select name="veiculo_id" required></select>
+                    </label>
+                    <label>Categoria
+                        <input name="categoria" placeholder="Bateria, pneus, fluidos..." required>
+                    </label>
+                    <label>Peso (kg)
+                        <input type="number" name="peso_kg" min="0" step="any" required>
+                    </label>
+                </fieldset>
+
+                <fieldset class="ModalMateriais" data-entidade="materiais" hidden disabled>
+                    <label>Veículo
+                        <select name="veiculo_id" required></select>
+                    </label>
+                    <label>Categoria
+                        <input name="categoria" placeholder="Aço, alumínio, plásticos..." required>
+                    </label>
+                    <label>Peso (kg)
+                        <input type="number" name="peso_kg" min="0" step="any" required>
+                    </label>
+                </fieldset>
+
+                <p class="ModalMensagem" id="modalMensagem" role="status"></p>
+
+                <div class="ModalAcoes">
+                    <button type="button" class="BtnCancelar" data-fechar>Fechar</button>
+                    <button type="submit" class="BtnConfirmar" id="btnConfirmar"></button>
+                </div>
+
+                <!-- Sugestões (o usuário ainda pode digitar outro valor) -->
+                <datalist id="listaMotorizacao">
+                    <option value="Combustão interna">
+                    <option value="Híbrido">
+                    <option value="Elétrico">
+                </datalist>
+                <datalist id="listaCombustivel">
+                    <option value="Flex">
+                    <option value="Gasolina">
+                    <option value="Etanol">
+                    <option value="Diesel">
+                </datalist>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

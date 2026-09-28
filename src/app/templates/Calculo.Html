@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculo da pegada de carbono</title>
+    <link rel="stylesheet" href="../static/styles/index.css">
+    <link rel="stylesheet" href="../static/styles/paginas.css">
+</head>
+<body>
+    <header><h1>Software pegada de carbono</h1></header>
+    <nav>
+        <a href="{{url_for('Home')}}">Início</a>
+        <a href="{{url_for('Dados')}}">Dados</a>
+        <a href="{{url_for('Calculo')}}" aria-current="page">Cálculo</a>
+    </nav>
+    <main>
+        <section>
+            <h2>Calcular pegada de carbono</h2>
+            <div class="Barra">
+                <label>Veículo <select id="veiculo"></select></label>
+                <label>Cenário
+                    <select id="cenario">
+                        <option value="base">base</option>
+                        <option value="baixa">baixa</option>
+                        <option value="alta">alta</option>
+                    </select>
+                </label>
+                <button id="calcular">Calcular</button>
+            </div>
+            <p class="Aviso" id="erro" hidden></p>
+            <div class="Tabela"><table id="resultado"></table></div>
+            <p id="evitado"></p>
+            <p class="Nota">Fórmulas provisórias: confira a função <code>calcular()</code> com o seu PDF de metodologia.</p>
+        </section>
+    </main>
+    <script src="../static/scripts/Calculo.js" defer></script>
+</body>
+</html>
