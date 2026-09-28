@@ -109,19 +109,7 @@ class FatorMaterialVirgem(Base):
     FD = Column(Float)                      # fator de deslocamento (0-1)
  
     material = relationship('Materiais', back_populates='fatorVirgem')
- 
-class ResultadoCalculo(Base):
-    __tablename__ = 'ResultadoCalculo'
-    id = Column(Integer, primary_key=True)
-    veiculo_id = Column(Integer, ForeignKey('ModelosCarro.id'))
-    Cenario = Column(String(20), default="base")
-    Etapa = Column(String(30))              # transporte, eletricidade, diesel, disposicao, fluidos, reciclagem
-    EmissaoKgCO2e = Column(Float)
-    ParticipacaoPct = Column(Float)
-    EvitadoKgCO2e = Column(Float, nullable=True)  # só preenchido na linha "reciclagem" (seção 13)
- 
-    veiculo = relationship('Veiculo', back_populates='resultados')
- 
+    
 #region testes
 Base.metadata.create_all(engine)
 

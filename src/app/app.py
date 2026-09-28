@@ -13,7 +13,7 @@ from flask_cors import CORS
 from flask_bcrypt import Bcrypt  # criptografia
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from data.db import Veiculo,Componentes,Materiais,Destinacao,ResiduoEspecial,DadoAtividade,FatorEmissao,FatorMaterialVirgem,ResultadoCalculo, session
+from data.db import Veiculo,Componentes,Materiais,Destinacao,ResiduoEspecial,DadoAtividade,FatorEmissao,FatorMaterialVirgem, session
 app = Flask(__name__)
 app.debug = True #debug so qnd for fazer alterações e nn ter que rebuildar/rerodar o código
 
@@ -298,38 +298,6 @@ def criar_fator_material_virgem():
         session.close()
 
 
-@app.route("/ResultadoCalculo", methods=["POST"])
-@swag_from("docs/ResultadoCalculoPost.yml")
-def criar_resultado_calculo():
-    session = get_session()
-    dados = request.get_json()
-    try:
-        resultado_calculo = ResultadoCalculo(
-            veiculo_id=dados.get("veiculo_id"),
-            Cenario=dados.get("cenario", "base"),
-            Etapa=dados.get("etapa"),
-            EmissaoKgCO2e=dados.get("emissao_kgco2e"),
-            ParticipacaoPct=dados.get("participacao_pct"),
-            EvitadoKgCO2e=dados.get("evitado_kgco2e"),
-        )
-        session.add(resultado_calculo)
-        session.commit()
-        resultado = {
-            "id": resultado_calculo.id,
-            "veiculo_id": resultado_calculo.veiculo_id,
-            "cenario": resultado_calculo.Cenario,
-            "etapa": resultado_calculo.Etapa,
-            "emissao_kgco2e": resultado_calculo.EmissaoKgCO2e,
-            "participacao_pct": resultado_calculo.ParticipacaoPct,
-            "evitado_kgco2e": resultado_calculo.EvitadoKgCO2e,
-        }
-        return jsonify(resultado), 201
-    except Exception as e:
-        session.rollback()
-        return jsonify({"erro": str(e)}), 400
-    finally:
-        session.close()
-
 #endRegion AddDados
 
 #endregion DadosJsonPost
@@ -510,28 +478,6 @@ def listar_fatores_material_virgem():
     return jsonify(ListaFatoresVirgem)
 
 
-@app.route("/ResultadoCalculo", methods=["GET"])
-@swag_from("docs/ResultadoCalculoGet.yml")
-def listar_resultados_calculo():
-    session = get_session()
-    resultados = session.query(ResultadoCalculo).all()
-
-    ListaResultados = [
-        {
-            "id": r.id,
-            "veiculo_id": r.veiculo_id,
-            "cenario": r.Cenario,
-            "etapa": r.Etapa,
-            "emissao_kgco2e": r.EmissaoKgCO2e,
-            "participacao_pct": r.ParticipacaoPct,
-            "evitado_kgco2e": r.EvitadoKgCO2e,
-        }
-        for r in resultados
-    ]
-
-    session.close()
-    return jsonify(ListaResultados)
-
 #endregion DadosJsonGET
 
 #region EditarRemoverDados
@@ -611,7 +557,6 @@ def remover_veiculo(id):
         session.query(Componentes).filter(Componentes.veiculo_id == id).delete(synchronize_session=False)
         session.query(ResiduoEspecial).filter(ResiduoEspecial.veiculo_id == id).delete(synchronize_session=False)
         session.query(DadoAtividade).filter(DadoAtividade.veiculo_id == id).delete(synchronize_session=False)
-        session.query(ResultadoCalculo).filter(ResultadoCalculo.veiculo_id == id).delete(synchronize_session=False)
         session.query(Veiculo).filter(Veiculo.id == id).delete(synchronize_session=False)
         session.commit()
         return jsonify({"removido": id})
