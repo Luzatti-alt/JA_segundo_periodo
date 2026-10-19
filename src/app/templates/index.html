@@ -9,7 +9,11 @@
 </head>
 <body>
     <header>
-        <h1>Software pegada de carbono</h1>
+        <nav>
+            <a href="{{url_for('Home')}}">Início</a>
+            <a href="{{url_for('Dados')}}" aria-current="page">Dados</a>
+            <a href="{{url_for('Calculo')}}">Cálculo</a>
+        </nav>
     </header>
     <main>
         <h1>Controle de dados</h1>
@@ -29,14 +33,6 @@
                 <button data-acao="editar" data-entidade="materiais">Editar material do banco de dados</button>
                 <button data-acao="remover" data-entidade="materiais">Remover material do banco de dados</button>
             </div>
-        </div>
-
-        <h1>Informações e cálculos</h1>
-
-        <div class="Calcs">
-            <button><a href="{{url_for('Calculo')}}">Calcular Pegada Carbono</a></button>
-            <button><a href="{{url_for('Dados')}}">Ver Dados</a></button><!--html so para demonstrar os dados do db-->
-        
         </div>
     </main>
 

@@ -30,7 +30,6 @@ class Veiculo(Base):
     destinacoes = relationship('Destinacao', back_populates='veiculo')
     residuosEspeciais = relationship('ResiduoEspecial', back_populates='veiculo')
     atividades = relationship('DadoAtividade', back_populates='veiculo')
-    resultados = relationship('ResultadoCalculo', back_populates='veiculo')
  
  
 class Componentes(Base):
@@ -109,7 +108,11 @@ class FatorMaterialVirgem(Base):
     FD = Column(Float)                      # fator de deslocamento (0-1)
  
     material = relationship('Materiais', back_populates='fatorVirgem')
-    
+
+class QRFiles(Base):
+    __tablename__ = 'QRs'
+    id = Column(Integer, primary_key=True)
+    path = Column(String)
 #region testes
 Base.metadata.create_all(engine)
 
