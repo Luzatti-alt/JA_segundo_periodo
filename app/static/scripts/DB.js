@@ -1,12 +1,7 @@
 const COLUNAS = {
-    "/Veiculo": ["id", "categoria", "motorizacao", "combustivel", "massa_total_kg", "vida_util_anos", "quilometragem_km", "estado"],
+    "/Veiculo": ["id", "veiculo", "modelo", "chassi", "ano", "categoria", "massa_total_kg", "vida_util_anos", "estado"],
     "/Componentes": ["id", "veiculo_id", "categoria", "peso_kg"],
-    "/Materiais": ["id", "veiculo_id", "categoria", "peso_kg"],
-    "/DadoAtividade": ["id", "veiculo_id", "cenario", "processo", "valor", "unidade"],
-    "/Destinacao": ["id", "veiculo_id", "material_id", "cenario", "pct_reciclagem", "pct_reuso", "pct_valorizacao", "pct_disposicao"],
-    "/FatorEmissao": ["id", "material_id", "processo", "valor", "unidade", "origem"],
-    "/FatorMaterial": ["id", "material_id", "fe_virgem", "fd"],
-    "/ResiduoEspecial": ["id", "veiculo_id", "nome", "quantidade", "unidade", "destino"],
+    "/Materiais": ["id", "peca_id", "categoria", "peso_kg"],
 };
 const linha = (celulas, tag) => {
     const tr = document.createElement("tr");

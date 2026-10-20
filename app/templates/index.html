@@ -12,7 +12,6 @@
         <nav>
             <a href="{{url_for('Home')}}">Início</a>
             <a href="{{url_for('Dados')}}" aria-current="page">Dados</a>
-            <a href="{{url_for('Calculo')}}">Cálculo</a>
         </nav>
     </header>
     <main>
@@ -33,6 +32,10 @@
                 <button data-acao="editar" data-entidade="materiais">Editar material do banco de dados</button>
                 <button data-acao="remover" data-entidade="materiais">Remover material do banco de dados</button>
             </div>
+            <Div class="QRS">
+                <button type="button" onclick="window.location.href={{url_for('Home')}};">Lista de QRS</button>
+                <button>Imprimir QR</button>
+            </Div>
         </div>
     </main>
 

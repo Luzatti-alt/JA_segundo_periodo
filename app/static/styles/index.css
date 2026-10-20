@@ -58,7 +58,7 @@ main{
     align-items: center;
     margin-bottom: 2vh;
 }
-.Veiculo, .Componentes, .Material{
+.Veiculo, .Componentes, .Material, .QRS{
     display: flex;
     flex-direction: column;
     margin-left: 5%;
