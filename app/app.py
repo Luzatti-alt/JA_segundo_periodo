@@ -14,9 +14,8 @@ from flask_cors import CORS
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
-from src.app.data.db import (session, Veiculo, Componentes, Materiais,
-                     Destinacao, ResiduoEspecial, DadoAtividade, FatorEmissao)
-from src.app.data.doc.GerarDados import QR
+from app.data.db import (session, Veiculo, Pecas, Materiais,)
+from app.data.doc.GerarDados import QR
 
 app = Flask(__name__)
 app.debug = True  # debug só enquanto desenvolve, para não precisar reiniciar a cada alteração
@@ -45,14 +44,39 @@ def Dados():
 
 #endregion Interface
 
-#region QR
-@app.route("/QR/<doc>", methods=["GET"])
-def QRGeradoPagina():
-    return render_template("QRGerado.html")
+from flask import Flask, render_template, request, jsonify, send_file, abort
+from app.data.db import session, Veiculo, Pecas, Materiais, QRFiles
+from app.data.doc.GerarDados import QR
 
-def DownloadPDF(QRDoc):
-    upload = Upload.query.filter_by(id=QRDoc).first()
-    return send_file(BytesIO(upload.data), download_name=upload.filename, as_attachment=True )
+#region QR
+@app.route("/QR", methods=["GET"])
+def QRLista():
+    """Lista os QRs gerados, para escanear da tela do PC no teste."""
+    qrs = session.query(QRFiles).order_by(QRFiles.id).all()
+    return render_template("QRGerado.html", qrs=qrs)
+
+@app.route("/QR/<int:qr_id>", methods=["GET"])
+def QRGeradoPagina(qr_id):
+    registro = session.get(QRFiles, qr_id)
+    if registro is None:
+        abort(404)
+    return render_template("QRGerado.html", qrs=[registro])
+
+@app.route("/QR/<int:qr_id>/imagem", methods=["GET"])
+def QRImagem(qr_id):
+    registro = session.get(QRFiles, qr_id)
+    if registro is None or not registro.path:
+        abort(404)
+    return send_file(registro.path, mimetype="image/png")
+
+@app.route("/download/<int:qr_id>", methods=["GET"])  # rota que o QR aponta
+def DownloadPDF(qr_id):
+    pdf = QR.QrLido(qr_id)
+    if pdf is None:
+        abort(404)
+    return send_file(pdf, mimetype="application/pdf",
+                     download_name=f"relatorio_qr_{qr_id}.pdf",
+                     as_attachment=True)
 #endregion QR
 
 #region rodar
