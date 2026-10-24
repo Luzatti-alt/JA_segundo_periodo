@@ -5,17 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dados do banco</title>
     <link rel="stylesheet" href="../static/styles/Data.css">
-    <link rel="stylesheet" href="../static/styles/paginas.css">
+    <link rel="stylesheet" href="../static/styles/base.css">
     <script src="../static/scripts/DB.js" defer></script>
 </head>
 <body>
     <header>
+        <div class="home">
+            <h1>Pegada+</h1><!--nome placehoarder-->
+        </div>
         <nav>
             <a href="{{url_for('Home')}}">Início</a>
             <a href="{{url_for('Dados')}}" aria-current="page">Dados</a>
+            <a href="{{url_for('QRLista')}}" aria-current="page">QRs</a>
+            <a href="{{url_for('Calculos')}}" aria-current="page">Calculos</a>
         </nav>
     </header>
     <main>
+        <!--adicionar meio de filtrar ex select por modelo de veiculo ano etc-->
         <section>
             <h2>Veículos</h2>
             <div class="Tabela"><table data-rota="/Veiculo"></table></div>

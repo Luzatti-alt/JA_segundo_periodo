@@ -1,7 +1,7 @@
 const COLUNAS = {
-    "/Veiculo": ["id", "veiculo", "modelo", "chassi", "ano", "categoria", "massa_total_kg", "vida_util_anos", "estado"],
-    "/Componentes": ["id", "veiculo_id", "categoria", "peso_kg"],
-    "/Materiais": ["id", "peca_id", "categoria", "peso_kg"],
+    "/Veiculo": ["veiculo", "modelo", "chassi", "ano", "categoria", "massa total kg", "vida util anos", "estado"],
+    "/Componentes": ["categoria","modelo veiculo", "peso kg"],
+    "/Materiais": ["categoria", "peso kg"],
 };
 const linha = (celulas, tag) => {
     const tr = document.createElement("tr");

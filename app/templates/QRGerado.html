@@ -3,17 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/styles/QR.css">
+    <link rel="stylesheet" href="../static/styles/base.css">
     <title>QR gerado</title>
 </head>
 <body>
-    <h1>QR #{{ qr_id }}</h1>
+    <header>
+        <div class="home">
+            <h1>Pegada+</h1><!--nome placehoarder-->
+        </div>
+        <nav>
+            <a href="{{url_for('Home')}}">Início</a>
+            <a href="{{url_for('Dados')}}" aria-current="page">Dados</a>
+            <a href="{{url_for('QRLista')}}" aria-current="page">QRs</a>
+            <a href="{{url_for('Calculos')}}" aria-current="page">Calculos</a>
+        </nav>
+    </header>
+    <div class="Menu">
+        <div class="controle">
+            <h1>Controle QR</h1>
+            <div class="controleQR">
+                <select name="qr_id" id="qr_id">
+                    {% for q in qrs %}
+                    <option value="{{ q.id }}">#{{ q.id }} - {{ q.data }}</option>
+                    {% endfor %}
+                </select><!--lista/id do QR-->
+                <button>imprimr QR</button>
+                <button>excluir QR</button>
+            </div>
+        </div>
+        <div class="pesquisar">
+            <h1>Pesquisar QRS</h1>
+            <div class="barrapesquisa">
+                <input type="text">
+                <button>Pesquisar</button>
+            </div>
+    </div>
+    </div>
+    <!--
     <p>Arquivo no banco: <code>{{ path }}</code></p>
     <p>Arquivo existe no disco: {{ 'sim' if existe else 'não' }}</p>
     <p>Link do download: <a href="{{ link }}">{{ link }}</a></p>
-    <div style="display:flex;flex-wrap:wrap;gap:16px;font-family:sans-serif">
+    -->
+    <div class="ListaQR">
         {% for q in qrs %}
-        <div style="text-align:center">
-            <img src="/QR/{{ q.id }}/imagem" width="180"><br>#{{ q.id }} - {{ q.data }}
+        <div class="item">
+            <img src="{{ url_for('QRImagem', qr_id=q.id) }}" width="180">
+            <br>#{{ q.id }} - {{ q.data }}
         </div>
         {% endfor %}
         </div>

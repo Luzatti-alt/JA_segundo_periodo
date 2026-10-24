@@ -15,9 +15,10 @@ from sqlalchemy import func,create_engine
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
+import qrcode
 
-from app.data.db import Session, Veiculo, Pecas, Materiais, QRFiles
-from app.data.doc.GerarDados import QR
+from app.data.db import session, Session, Veiculo, Pecas, Materiais, QRFiles
+from app.data.doc.GerarDados import QR, IpLocal
 
 app = Flask(__name__)
 app.debug = True  # debug só enquanto desenvolve, para não precisar reiniciar a cada alteração
@@ -47,16 +48,6 @@ def Home():
 def Dados():
     return render_template("DadosDB.html")
 
-#endregion Interface
-#region QR
-@app.route("/QR", methods=["GET"])
-@app.route("/qr", methods=["GET"])
-@swag_from("app/data/doc/swagger/qr_lista.yml")
-def QRLista():
-    s = get_session()
-    qrs = s.query(QRFiles).order_by(QRFiles.id).all()
-    return render_template("QRGerado.html", qrs=qrs)
-
 @app.route("/QR/<int:qr_id>", methods=["GET"])
 def QRGeradoPagina(qr_id):
     s = get_session()
@@ -65,13 +56,38 @@ def QRGeradoPagina(qr_id):
         abort(404)
     return render_template("QRGerado.html", qrs=[registro])
 
+@app.route("/Calculos", methods=['GET'])
+def Calculos():
+    return render_template("Calculos.html")
+
+#endregion Interface
+#region QR
+@app.route("/QR", methods=["GET"])
+@app.route("/qr", methods=["GET"])
+@swag_from("app/data/doc/swagger/qr_lista.yml")
+def QRLista():
+    with Session() as s:
+        qrs = s.query(QRFiles).order_by(QRFiles.id).all()
+        return render_template("QRGerado.html", qrs=qrs)
+
+
 @app.route("/QR/<int:qr_id>/imagem", methods=["GET"])
 def QRImagem(qr_id):
-    s = get_session()
-    registro = s.get(QRFiles, qr_id)
-    if registro is None or not registro.path:
-        abort(404)
-    return send_file(registro.path, mimetype="image/png")
+    with Session() as s:
+        if s.get(QRFiles, qr_id) is None:
+            abort(404)
+
+    host = request.host
+    if host.startswith(("127.0.0.1", "localhost")):
+        host = f"{IpLocal()}:5000"      # celular não alcança localhost
+
+    img = qrcode.make(f"http://{host}/download/{qr_id}", box_size=10, border=4)
+    buf = BytesIO()                      # BytesIO já está importado no seu app.py
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    resp = send_file(buf, mimetype="image/png", max_age=0)
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 @app.route("/download/<int:qr_id>", methods=["GET"])  # rota que o QR aponta
 def DownloadPDF(qr_id):
@@ -81,6 +97,7 @@ def DownloadPDF(qr_id):
     return send_file(pdf, mimetype="application/pdf",
                      download_name=f"relatorio_qr_{qr_id}.pdf",
                      as_attachment=True)
+#pesquisar qr (a fazer)
 #endregion QR
 
 #region dados
@@ -92,14 +109,13 @@ def listar_veiculos():
     s = get_session()
     try:
         return jsonify([{
-            "id": v.id,
             "veiculo": v.veiculo,
             "modelo": v.Modelo,
             "chassi": v.Chassi,
             "ano": v.Ano,
             "categoria": v.CategoriaVeiculo,
-            "massa_total_kg": v.MassaTotal,
-            "vida_util_anos": v.VidaUtilAnos,
+            "massa total kg": v.MassaTotal,
+            "vida util anos": v.VidaUtilAnos,
             "estado": v.Estado,
         } for v in s.query(Veiculo).all()])
     finally:
@@ -110,13 +126,15 @@ def listar_veiculos():
 @swag_from("docs/ComponentesGet.yml")
 def listar_componentes():
     s = get_session()
-    try:
+    try:   
+        tipos = (s.query(Pecas, Veiculo)
+                .join(Veiculo, Pecas.veiculo_id == Veiculo.id)
+                .all())
         return jsonify([{
-            "id": c.id,
-            "veiculo_id": c.veiculo_id,
-            "categoria": c.Categoria,
-            "peso_kg": c.Peso,
-        } for c in s.query(Pecas).all()])
+            "modelo veiculo": v.Modelo,
+            "categoria": p.Categoria,
+            "peso kg": p.Peso,
+        } for p, v in tipos])
     finally:
         s.close()
 
@@ -127,10 +145,8 @@ def listar_materiais():
     s = get_session()
     try:
         return jsonify([{
-            "id": m.id,
-            "peca_id": m.peca_id,
             "categoria": m.Categoria,
-            "peso_kg": m.Peso,
+            "peso kg": m.Peso,
         } for m in s.query(Materiais).all()])
     finally:
         s.close()
@@ -229,5 +245,8 @@ def criar_material():
 #endregion dados
 #region rodar
 if __name__ == "__main__":
+    # com debug, o reloader executa este bloco 2x; só o processo filho (WERKZEUG_RUN_MAIN) regera
+    if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        QR.RegerarTodos()
     app.run(host="0.0.0.0", port=5000)
 #endregion rodar
