@@ -27,12 +27,15 @@ class Veiculo(Base):
     id = Column(Integer, primary_key=True)
     veiculo = Column(String(100))
     Modelo = Column(String(100))
-    Chassi = Column(String(30), unique=True, nullable=True)
+    Chassi = Column(String(30),nullable=True)
     Ano = Column(Integer)
     CategoriaVeiculo = Column(String(50))
+    QuantidadePecas = Column(Integer, default=1)
     MassaTotal = Column(Float)  # kg
     Estado = Column(String(30), default="Fim de vida")
-    VidaUtilAnos = Column(Integer)
+    VidaUtilAnos = Column(Integer, default=10)
+    Kilometragem = Column(Integer, default=0)
+    QuantidadePorModelos = Column(Integer, default= 1)
 
     pecas = relationship('Pecas', back_populates='veiculo')
     qrs = relationship('QRFiles', back_populates='veiculo')

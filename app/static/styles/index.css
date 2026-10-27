@@ -2,25 +2,13 @@
 [hidden]{
     display: none !important;
 }/* começa com modal escondido*/
-.ControleDB{
+.VeiculoModelo, .Veiculo, .Componentes, .Material, .QRS{
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
     margin-bottom: 2vh;
-}
-.Veiculo, .Componentes, .Material, .QRS{
-    display: flex;
-    flex-direction: column;
-    margin-left: 5%;
-    margin-right: 5%;
-}
-.Calcs{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 2vh;
+    gap: 2vw;
 }
 button{
     color: white;

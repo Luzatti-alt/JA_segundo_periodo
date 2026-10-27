@@ -21,23 +21,30 @@
         </nav>
     </header>
     <main>
-        <h1>Controle de dados</h1>
-        <div class="ControleDB">
-            <div class="Veiculo">
-                <button data-acao="adicionar" data-entidade="veiculo">Adicionar veículo ao banco de dados</button>
-                <button data-acao="editar" data-entidade="veiculo">Editar veículo do banco de dados</button>
-                <button data-acao="remover" data-entidade="veiculo">Remover veículo do banco de dados</button>
-            </div>
-            <div class="Componentes">
-                <button data-acao="adicionar" data-entidade="componentes">Adicionar componente ao banco de dados</button>
-                <button data-acao="editar" data-entidade="componentes">Editar componente do banco de dados</button>
-                <button data-acao="remover" data-entidade="componentes">Remover componente do banco de dados</button>
-            </div>
-            <div class="Material">
-                <button data-acao="adicionar" data-entidade="materiais">Adicionar material ao banco de dados</button>
-                <button data-acao="editar" data-entidade="materiais">Editar material do banco de dados</button>
-                <button data-acao="remover" data-entidade="materiais">Remover material do banco de dados</button>
-            </div>
+        <!--talvez uma dashboard de emissões ou algo assim(ou algumas em um carrosel)-->
+        <h1>Controle de dados modelo veiculo</h1>
+        <div class="VeiculoModelo">
+            <button data-acao="adicionar" data-entidade="VeiculoModelo">Adicionar veículo ao banco de dados</button>
+            <button data-acao="editar" data-entidade="VeiculoModelo">Editar veículo do banco de dados</button>
+            <button data-acao="remover" data-entidade="VeiculoModelo">Remover veículo do banco de dados</button>
+        </div>
+        <h1>Controle de dados veiculo individual</h1>
+        <div class="Veiculo">
+            <button data-acao="adicionar" data-entidade="veiculo">Adicionar veículo ao banco de dados</button>
+            <button data-acao="editar" data-entidade="veiculo">Editar veículo do banco de dados</button>
+            <button data-acao="remover" data-entidade="veiculo">Remover veículo do banco de dados</button>
+        </div>
+        <h1>Controle de dados componentes</h1>
+        <div class="Componentes">
+            <button data-acao="adicionar" data-entidade="componentes">Adicionar componente ao banco de dados</button>
+            <button data-acao="editar" data-entidade="componentes">Editar componente do banco de dados</button>
+            <button data-acao="remover" data-entidade="componentes">Remover componente do banco de dados</button>
+        </div>
+        <h1>Controle de dados materiais</h1>
+        <div class="Material">
+            <button data-acao="adicionar" data-entidade="materiais">Adicionar material ao banco de dados</button>
+            <button data-acao="editar" data-entidade="materiais">Editar material do banco de dados</button>
+            <button data-acao="remover" data-entidade="materiais">Remover material do banco de dados</button>
         </div>
     </main>
 
@@ -50,36 +57,79 @@
             </div>
 
             <form id="modalForm">
-                <!-- Aparece só em editar/remover -->
+                <!-- Aparece só em editar/remover e quando adicionar veiculo(usando modelo como base) -->
                 <label class="ModalSeletor" id="modalSeletor" hidden>
                     Registro
                     <select id="seletorRegistro"></select>
                 </label>
 
                 <!-- Os names dos campos são iguais às chaves do JSON da API -->
-                <fieldset class="ModalVeiculo" data-entidade="veiculo" hidden disabled>
+                <!-- Os names dos campos são iguais às chaves do JSON da API -->
+                <fieldset class="ModalVeiculoModelo" data-entidade="VeiculoModelo" hidden disabled>
+                    <label>Marca
+                        <input name="veiculo" placeholder="Nissan" required>
+                    </label>
+                    <label>Modelo
+                        <input name="modelo" placeholder="Leaf" required>
+                    </label>
+                    <label>Ano
+                        <input type="number" name="ano" min="1900" step="1">
+                    </label>
+                    <label>Chassi
+                        <input name="categoria" placeholder="modelo Chassi" required>
+                    </label>
                     <label>Categoria
                         <input name="categoria" placeholder="Veículo compacto de passeio" required>
                     </label>
-                    <label>Motorização
-                        <input name="motorizacao" list="listaMotorizacao" placeholder="Combustão interna" required>
-                    </label>
-                    <label>Combustível
-                        <input name="combustivel" list="listaCombustivel" placeholder="Flex">
-                    </label>
                     <label>Massa total (kg)
                         <input type="number" name="massa_total_kg" min="0" step="any" required>
+                    </label>
+                    <label>Quantidade deste modelo
+                        <input type="number" name="quantidade_por_modelos" min="1" step="1" value="1">
                     </label>
                     <label>Vida útil (anos)
                         <input type="number" name="vida_util_anos" min="0" step="1">
                     </label>
                     <label>Quilometragem (km)
-                        <input type="number" name="quilometragem_km" min="0" step="any">
+                        <input type="number" name="quilometragem_km" min="0" step="1">
                     </label>
                     <label>Estado
                         <input name="estado" value="Fim de vida">
                     </label>
                 </fieldset>
+
+                <!-- esse segundo é para modelos incompletos/carros usados -->
+                <fieldset class="ModalVeiculo" data-entidade="veiculo" hidden disabled>
+    <!-- só exibição: o valor real vai nos inputs hidden abaixo -->
+    <p class="ModalVeiculoBase">
+        Veículo: <strong id="veiculoTexto">-</strong>
+    </p>
+    <input type="hidden" name="veiculo">
+    <input type="hidden" name="modelo">
+
+    <label>Chassi
+        <input name="chassi" maxlength="30">
+    </label>
+    <label>Ano
+        <input type="number" name="ano" min="1900" step="1">
+    </label>
+    <label>Categoria
+        <input name="categoria" placeholder="Veículo compacto de passeio">
+    </label>
+    <label>Massa total (kg)
+        <!-- preencher automaticamente porem teoricamente nn pode ser maior que peso do modelo base se for provavelmente tem algo errado-->
+        <input type="number" name="massa_total_kg" min="1" step="any">
+    </label>
+    <label>Vida útil (anos)
+        <input type="number" name="vida_util_anos" min="0" step="1">
+    </label>
+    <label>Quilometragem (km)
+        <input type="number" name="quilometragem_km" min="0" step="1">
+    </label>
+    <label>Estado
+        <input name="estado" value="Fim de vida">
+    </label>
+</fieldset>
 
                 <fieldset class="ModalComponentes" data-entidade="componentes" hidden disabled>
                     <label>Veículo
@@ -94,8 +144,8 @@
                 </fieldset>
 
                 <fieldset class="ModalMateriais" data-entidade="materiais" hidden disabled>
-                    <label>Veículo
-                        <select name="veiculo_id" required></select>
+                    <label>Peça
+                        <select name="peca_id" required></select>
                     </label>
                     <label>Categoria
                         <input name="categoria" placeholder="Aço, alumínio, plásticos..." required>

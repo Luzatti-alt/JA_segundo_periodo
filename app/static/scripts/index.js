@@ -1,9 +1,15 @@
 // Cada entidade tem a rota da API e como mostrar um registro na lista de seleção
+// ATENÇÃO: as chaves daqui precisam ser IGUAIS ao data-entidade do HTML (maiúsculas contam)
 const ENTIDADES = {
+    VeiculoModelo: {
+        rota: "/VeiculoModelo",
+        nome: "modelo de veículo",
+        rotulo: r => `#${r.id} · ${r.veiculo} ${r.modelo} · ${dado(r, "massa_total_kg") ?? "?"} kg · ${r.categoria ?? "sem categoria"}`,
+    },
     veiculo: {
         rota: "/Veiculo",
         nome: "veículo",
-        rotulo: r => `#${r.id} · ${r.categoria} · ${r.motorizacao}`,
+        rotulo: r => `#${r.id} · ${r.veiculo} ${r.modelo} · ${r.chassi ?? "modelo (sem chassi)"}`,
     },
     componentes: {
         rota: "/Componentes",
@@ -13,14 +19,47 @@ const ENTIDADES = {
     materiais: {
         rota: "/Materiais",
         nome: "material",
-        rotulo: r => `#${r.id} · ${r.categoria} · ${r.peso_kg} kg (veículo ${r.veiculo_id})`,
+        rotulo: r => `#${r.id} · ${r.categoria} · ${r.peso_kg} kg (peça ${r.peca_id})`,
     },
+};
+
+
+
+const seletorTitulo = document.getElementById("seletorTitulo");
+let modeloBase = null;
+
+// adicionar veículo individual = escolhe um modelo base no seletor
+const usaModeloBase = () => acaoAtual === "adicionar" && entidadeAtual === "veiculo";
+
+// aceita "peso_kg" e também "peso kg" (chaves dos GETs com espaço)
+function dado(r, chave) {
+    return r[chave] ?? r[chave.replaceAll("_", " ")];
+}
+
+async function carregarRegistros(entidade = entidadeAtual) {
+    const { rota, rotulo } = ENTIDADES[entidade];
+    registros = await api(rota);
+    preencherOpcoes(seletor, registros, rotulo, registros.length ? "Selecione..." : "Nenhum registro cadastrado");
+}
+
+// Selects preenchidos com registros de outra entidade (pelo name do campo).
+// Também dá para usar data-fonte="entidade" direto no <select>.
+const FONTE_POR_NOME = {
+    veiculo_id: "veiculo",
+    peca_id: "componentes",
 };
 
 const ACOES = {
     adicionar: { verbo: "Adicionar", botao: "Salvar", metodo: "POST", feito: "adicionado" },
     editar:    { verbo: "Editar",    botao: "Salvar alterações", metodo: "PUT", feito: "atualizado" },
     remover:   { verbo: "Remover",   botao: "Remover", metodo: "DELETE", feito: "removido" },
+};
+
+const AVISOS_REMOVER = {
+    VeiculoModelo: "\n\nIsso também apaga componentes, materiais e QRs ligados a este modelo.",
+    veiculo: "\n\nIsso também apaga componentes, materiais e QRs ligados a este veículo.",
+    componentes: "\n\nIsso também apaga os materiais e QRs desta peça.",
+    materiais: "\n\nIsso também apaga os QRs deste material.",
 };
 
 const modal = document.getElementById("modal");
@@ -55,7 +94,7 @@ function mostrarMensagem(texto, tipo = "") {
 }
 
 function fieldsetAtual() {
-    return form.querySelector(`fieldset[data-entidade="${entidadeAtual}"]`);
+    return [...fieldsets].find(fs => fs.dataset.entidade === entidadeAtual);
 }
 
 function preencherOpcoes(select, itens, textoDe, placeholder) {
@@ -78,13 +117,17 @@ function lerCampos() {
     return dados;
 }
 
-async function carregarVeiculosNoSelect() {
-    const select = fieldsetAtual().querySelector('select[name="veiculo_id"]');
-    if (!select) return; //não tem esse campo
-    const { rotulo, rota } = ENTIDADES.veiculo;
-    const veiculos = await api(rota);
-    // com veículos cadastrados o select já começa no primeiro; sem nenhum, mostra o aviso
-    preencherOpcoes(select, veiculos, rotulo, veiculos.length ? null : "Nenhum veículo cadastrado");
+// Preenche todo <select> do fieldset que depende de outra entidade
+async function carregarSelects() {
+    const selects = [...fieldsetAtual().querySelectorAll("select")].filter(
+        s => s.dataset.fonte || FONTE_POR_NOME[s.name]
+    );
+    await Promise.all(selects.map(async select => {
+        const fonte = select.dataset.fonte || FONTE_POR_NOME[select.name];
+        const { rota, rotulo, nome } = ENTIDADES[fonte];
+        const itens = await api(rota);
+        preencherOpcoes(select, itens, rotulo, itens.length ? "Selecione..." : `Nenhum ${nome} cadastrado`);
+    }));
 }
 
 async function carregarRegistros() {
@@ -93,8 +136,13 @@ async function carregarRegistros() {
     preencherOpcoes(seletor, registros, rotulo, registros.length ? "Selecione..." : "Nenhum registro cadastrado");
 }
 
-//abre e fecha o modal
+// abre e fecha o modal
 async function abrirModal(acao, entidade) {
+    if (!ENTIDADES[entidade]) {
+        console.error(`Entidade desconhecida: "${entidade}". Confira o data-entidade no HTML.`);
+        return;
+    }
+
     acaoAtual = acao;
     entidadeAtual = entidade;
 
@@ -109,24 +157,28 @@ async function abrirModal(acao, entidade) {
         fs.hidden = !ativo;
         fs.disabled = !ativo || acao === "remover"; // em "remover" os campos ficam só para conferir
     });
-    seletorBox.hidden = acao === "adicionar";
+    modeloBase = null;
+    seletorBox.hidden = acao === "adicionar" && !usaModeloBase();
+    if (seletorTitulo) seletorTitulo.textContent = usaModeloBase() ? "Modelo base" : "Registro";
     modal.hidden = false;
 
     try {
-        await carregarVeiculosNoSelect();
-        if (acao !== "adicionar") await carregarRegistros();
+        await carregarSelects();
+        if (usaModeloBase()) await carregarRegistros("VeiculoModelo");
+        else if (acao !== "adicionar") await carregarRegistros();
     } catch (erro) {
         mostrarMensagem(erro.message, "erro");
-    }
+}
 
     const primeiro = acao === "adicionar" ? fieldsetAtual().querySelector("input, select") : seletor;
-    primeiro.focus();
+    primeiro?.focus();
 }
 
 function fecharModal() {
     modal.hidden = true;
 }
-//eventos
+
+// eventos
 document.querySelectorAll("button[data-acao]").forEach(botao => {
     botao.addEventListener("click", () => abrirModal(botao.dataset.acao, botao.dataset.entidade));
 });
@@ -141,15 +193,19 @@ document.addEventListener("keydown", e => {
 
 seletor.addEventListener("change", () => {
     mostrarMensagem("");
+    const txt = document.getElementById("veiculoTexto");
     const registro = registros.find(r => r.id === Number(seletor.value));
     if (!registro) {
         limparCampos();
+        if (txt) txt.textContent = "-";
         return;
     }
     fieldsetAtual().querySelectorAll("[name]").forEach(campo => {
-        campo.value = registro[campo.name] ?? "";
+        campo.value = dado(registro, campo.name) ?? "";
     });
+    if (txt) txt.textContent = `${registro.veiculo ?? ""} ${registro.modelo ?? ""}`;
 });
+
 
 form.addEventListener("submit", async e => {
     e.preventDefault();
@@ -164,10 +220,7 @@ form.addEventListener("submit", async e => {
     }
 
     if (acaoAtual === "remover") {
-        const aviso = {
-            veiculo: "\n\nIsso também apaga componentes, materiais e demais dados ligados a este veículo.",
-            materiais: "\n\nIsso também apaga as destinações e fatores de emissão deste material.",
-        }[entidadeAtual] || "";
+        const aviso = AVISOS_REMOVER[entidadeAtual] || "";
         if (!confirm(`Remover este ${nome}?${aviso}`)) return;
     }
 
@@ -180,6 +233,7 @@ form.addEventListener("submit", async e => {
         await api(url, opcoes);
         form.reset();
         if (acaoAtual !== "adicionar") await carregarRegistros();
+        await carregarSelects(); // mantém os selects atualizados com o que acabou de mudar
         mostrarMensagem(`${nome[0].toUpperCase()}${nome.slice(1)} ${feito} com sucesso.`, "ok");
     } catch (erro) {
         mostrarMensagem(erro.message, "erro");

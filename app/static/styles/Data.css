@@ -18,13 +18,13 @@ table{
 th, td{
     padding: 6px 10px;
     border: 1px solid #4a4a4a;
-    text-align: left;
+    text-align: center;
 }
 th{
     background: #2b2b2b;
 }
 td.num{
-    text-align: right;
+    text-align: center;
 }
 .Aviso{
     color: #ff8f8f;
