@@ -1,58 +1,70 @@
 import os
 from datetime import datetime, timedelta
-from sqlalchemy import (create_engine, Integer, Column, Float, String,DateTime, ForeignKey)
+from sqlalchemy import (create_engine, Integer, Column, Float, String, DateTime, ForeignKey)
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
-
-os.makedirs("app/data", exist_ok=True)  # cria a pasta se não existir
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
+os.makedirs(DATA_DIR, exist_ok=True)   # era "app/data", relativo a quem roda
 DB_PATH = os.path.join(DATA_DIR, 'dbtest.db')
 engine = create_engine(f'sqlite:///{DB_PATH}')
-
 
 Base = declarative_base()
 
 Session = sessionmaker(bind=engine)
 session = Session()
 
-
 def refresh_session():
     global session
     session.close()
     session = Session()
 
-
-class Veiculo(Base):
+class ModeloVeiculo(Base):
     __tablename__ = 'ModelosCarro'
     id = Column(Integer, primary_key=True)
     veiculo = Column(String(100))
     Modelo = Column(String(100))
-    Chassi = Column(String(30),nullable=True)
     Ano = Column(Integer)
     CategoriaVeiculo = Column(String(50))
-    QuantidadePecas = Column(Integer, default=1)
-    MassaTotal = Column(Float)  # kg
+    MassaTotal = Column(Float)
     Estado = Column(String(30), default="Fim de vida")
     VidaUtilAnos = Column(Integer, default=10)
     Kilometragem = Column(Integer, default=0)
-    QuantidadePorModelos = Column(Integer, default= 1)
+    QuantidadePorModelos = Column(Integer, default=1)
 
-    pecas = relationship('Pecas', back_populates='veiculo')
-    qrs = relationship('QRFiles', back_populates='veiculo')
+    veiculos = relationship('Veiculo', back_populates='modelo_base')
+
+
+class Veiculo(Base):
+    __tablename__ = 'Veiculo'
+    id = Column(Integer, primary_key=True)
+    modelo_id = Column(Integer, ForeignKey('ModelosCarro.id'), nullable=True)
+    veiculo = Column(String(100))
+    Modelo = Column(String(100))
+    Chassi = Column(String(30), unique=True, nullable=False)
+    Ano = Column(Integer)
+    CategoriaVeiculo = Column(String(50))
+    MassaTotal = Column(Float)
+    Estado = Column(String(30), default="Fim de vida")
+    VidaUtilAnos = Column(Integer, default=10)
+    Kilometragem = Column(Integer, default=0)
+
+    modelo_base = relationship('ModeloVeiculo', back_populates='veiculos')
+    pecas = relationship('Pecas', back_populates='veiculo', cascade='all, delete-orphan')
+    qrs = relationship('QRFiles', back_populates='veiculo', cascade='all, delete-orphan')
+    atividade = relationship('AtividadeVeiculo', back_populates='veiculo', uselist=False,
+                             cascade='all, delete-orphan')
 
 
 class Pecas(Base):
     __tablename__ = 'Pecas'
     id = Column(Integer, primary_key=True)
-    veiculo_id = Column(Integer, ForeignKey('ModelosCarro.id'))
+    veiculo_id = Column(Integer, ForeignKey('Veiculo.id'))     
     Categoria = Column(String(50))
     Peso = Column(Float)
 
-    materiais = relationship('Materiais', back_populates='pecas')
+    materiais = relationship('Materiais', back_populates='pecas', cascade='all, delete-orphan')
     veiculo = relationship('Veiculo', back_populates='pecas')
-    qrs = relationship('QRFiles', back_populates='pecas')
-
-
+    qrs = relationship('QRFiles', back_populates='pecas', cascade='all, delete-orphan')
 class Materiais(Base):
     __tablename__ = 'Materiais'
     id = Column(Integer, primary_key=True)
@@ -61,15 +73,14 @@ class Materiais(Base):
     Peso = Column(Float)
 
     pecas = relationship('Pecas', back_populates='materiais')
-    qrs = relationship('QRFiles', back_populates='materiais')
-
+    qrs = relationship('QRFiles', back_populates='materiais', cascade='all, delete-orphan')
 
 class QRFiles(Base):
     __tablename__ = 'QRs'
     id = Column(Integer, primary_key=True)
     path = Column(String)
     data = Column(String)
-    veiculo_id = Column(Integer, ForeignKey('ModelosCarro.id'), nullable=True)
+    veiculo_id = Column(Integer, ForeignKey('Veiculo.id'), nullable=True)   
     peca_id = Column(Integer, ForeignKey('Pecas.id'), nullable=True)
     material_id = Column(Integer, ForeignKey('Materiais.id'), nullable=True)
 
@@ -81,8 +92,65 @@ class QRFiles(Base):
     pecas = relationship('Pecas', back_populates='qrs')
 
 
+#region calculo
+# Tabelas do modelo de cálculo (PDF "Parte 1"). Valores iniciais em app/data/doc/Calculos.py
+class FatorEmissao(Base):
+    __tablename__ = 'FatoresEmissao'
+    chave = Column(String(60), primary_key=True)   # ex.: "diesel", "reciclagem:Aço", "virgem:Cobre"
+    valor = Column(Float, nullable=False)
+    unidade = Column(String(30))
+    origem = Column(String(100), default="Hipotético")
+
+
+class DestinoMaterial(Base):
+    __tablename__ = 'DestinosMaterial'
+    material = Column(String(50), primary_key=True)   # grupo do PDF: Aço, Alumínio, Plásticos...
+    reciclagem = Column(Float, default=0)             # percentuais; cada linha deve fechar 100
+    reuso = Column(Float, default=0)
+    valorizacao = Column(Float, default=0)
+    disposicao = Column(Float, default=0)
+
+
+class AtividadeVeiculo(Base):
+    __tablename__ = 'AtividadeVeiculo'
+    id = Column(Integer, primary_key=True)
+    veiculo_id = Column(Integer, ForeignKey('Veiculo.id'), unique=True, nullable=False)
+    transporte_inicial_km = Column(Float)
+    energia_kwh = Column(Float)
+    diesel_l = Column(Float)
+    dist_reciclagem_km = Column(Float)
+    dist_reuso_km = Column(Float)
+    dist_valorizacao_km = Column(Float)
+    dist_disposicao_km = Column(Float)
+    dist_fluidos_km = Column(Float)
+
+    veiculo = relationship('Veiculo', back_populates='atividade')
+#endregion calculo
+
 #region testes
 Base.metadata.create_all(engine)
+
+
+def SeedCalculo():
+    """Cria os fatores e destinos do PDF que ainda não existem (não sobrescreve edições)."""
+    from app.data.doc.Calculos import FATORES_PADRAO, DESTINOS_PADRAO   # import local evita circular
+    with Session() as s:
+        try:
+            existentes = {f.chave for f in s.query(FatorEmissao).all()}
+            for chave, valor, unidade, origem in FATORES_PADRAO:
+                if chave not in existentes:
+                    s.add(FatorEmissao(chave=chave, valor=valor, unidade=unidade, origem=origem))
+            existentes = {d.material for d in s.query(DestinoMaterial).all()}
+            for material, (r, u, v, d) in DESTINOS_PADRAO.items():
+                if material not in existentes:
+                    s.add(DestinoMaterial(material=material, reciclagem=r, reuso=u,
+                                          valorizacao=v, disposicao=d))
+            s.commit()
+        except Exception:
+            s.rollback()   # dois processos do reloader podem semear ao mesmo tempo
+
+
+SeedCalculo()
 
 
 def ExData(base_url=None):
@@ -118,12 +186,15 @@ def ExData(base_url=None):
          ]),
     ]
 
-    veiculos, pecas_lista, materiais_lista = [], [], []
+    modelos, veiculos, pecas_lista, materiais_lista = [], [], [], []
 
     for (nome, modelo, chassi, ano, cat, massa, estado, vida, pecas) in dados:
-        v = Veiculo(veiculo=nome, Modelo=modelo, Chassi=chassi, Ano=ano,
+        m = ModeloVeiculo(veiculo=nome, Modelo=modelo, Ano=ano, CategoriaVeiculo=cat,
+                          MassaTotal=massa, Estado=estado, VidaUtilAnos=vida)
+        v = Veiculo(modelo_base=m, veiculo=nome, Modelo=modelo, Chassi=chassi, Ano=ano,
                     CategoriaVeiculo=cat, MassaTotal=massa, Estado=estado,
                     VidaUtilAnos=vida)
+        modelos.append(m)
         veiculos.append(v)
         for (pcat, ppeso, materiais) in pecas:
             p = Pecas(Categoria=pcat, Peso=ppeso, veiculo=v)
@@ -131,8 +202,8 @@ def ExData(base_url=None):
             for (mcat, mpeso) in materiais:
                 materiais_lista.append(Materiais(Categoria=mcat, Peso=mpeso, pecas=p))
 
-    session.add_all(veiculos + pecas_lista + materiais_lista)
-    session.commit()  # grava e gera os IDs
+    session.add_all(modelos + veiculos + pecas_lista + materiais_lista)
+    session.commit()
 
     ids = []
     for v in veiculos:

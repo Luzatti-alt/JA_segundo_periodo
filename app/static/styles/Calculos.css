@@ -1,0 +1,71 @@
+/* Acrescente ao FINAL do seu Calculos.css (não substitui nada). Usa só herança do base.css. */
+.CalcControle {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 1rem;
+}
+.CalcControle h2 {
+    flex-basis: 100%;
+
+}
+.CalcControle label {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    min-width: 18rem;
+}
+
+.CalcResumo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+.CalcCartao {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    padding: 1rem;
+    border: 1px solid #888;
+    border-radius: .5rem; }
+.CalcCartao strong {
+    font-size: 1.5rem;
+}
+.CalcCartao small {
+    opacity: .7;
+}
+summary, p,h2,td,tr,li,span,strong,small{
+    color: white;
+}
+.CalcGrade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: .75rem;
+    padding: .75rem 0; }
+.CalcGrade label {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+
+.CalcParametros details {
+    margin: .75rem 0;
+}
+.CalcParametros summary {
+    cursor: pointer;
+    padding: .5rem 0;
+    font-weight: bold;
+}
+.CalcParametros td input {
+    width: 100%;
+    min-width: 5rem; }
+
+.Nota {
+    opacity: .75;
+    font-size: .9rem;
+    margin: .5rem 0;
+}
+#listaAvisos {
+    padding-left: 1.25rem;
+}

@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../static/styles/base.css">
     <link rel="stylesheet" href="../static/styles/Calculos.css">
+    <script src="../static/scripts/Calculos.js" defer></script>
     <title>Calculos</title>
 </head>
 <body>
     <header>
         <div class="home">
-            <h1>Pegada+</h1><!--nome placehoarder-->
+            <h1>Pegada+</h1>
         </div>
         <nav>
             <a href="{{url_for('Home')}}">Início</a>
@@ -20,7 +21,71 @@
         </nav>
     </header>
     <main>
+        <section class="CalcControle">
+            <h2>Pegada de carbono no fim de vida</h2>
+            <label>Veículo
+                <select id="calcVeiculo"></select>
+            </label>
+            <button type="button" id="btnCalcular">Calcular</button>
+        </section>
+        <p class="Aviso" id="calcErro" hidden></p>
 
+        <div id="calcResultado" hidden>
+            <section class="CalcResumo" id="calcResumo"></section>
+
+            <section>
+                <h2>Emissões brutas por etapa</h2>
+                <div class="Tabela"><table id="tabEtapas"></table></div>
+            </section>
+            <section>
+                <h2>Reciclagem por material</h2>
+                <div class="Tabela"><table id="tabReciclagem"></table></div>
+            </section>
+            <section>
+                <h2>Destino da massa</h2>
+                <div class="Tabela"><table id="tabDestinoMassa"></table></div>
+            </section>
+            <section>
+                <h2>Benefício potencial de substituição</h2>
+                <div class="Tabela"><table id="tabBeneficio"></table></div>
+                <p class="Nota">Indicador comparativo e hipotético. Não representa carbono removido da atmosfera,
+                    e o saldo não deve ser apresentado como "pegada negativa".</p>
+            </section>
+            <section>
+                <h2>Comparação de cenários</h2>
+                <div class="Tabela"><table id="tabCenarios"></table></div>
+            </section>
+            <section>
+                <h2>Análise de sensibilidade</h2>
+                <div class="Tabela"><table id="tabSensibilidade"></table></div>
+            </section>
+            <section>
+                <h2>Lista de atenção</h2>
+                <div class="Tabela"><table id="tabAtencao"></table></div>
+            </section>
+            <section>
+                <h2>Avisos</h2>
+                <ul id="listaAvisos"></ul>
+            </section>
+        </div>
+
+        <section class="CalcParametros">
+            <h2>Parâmetros do modelo</h2>
+            <p class="Nota">Os valores iniciais são hipotéticos (PDF de apoio). Troque pelos dados reais e a origem de cada fator.</p>
+            <details>
+                <summary>Dados de atividade do veículo selecionado</summary>
+                <form id="formAtividade" class="CalcGrade"></form>
+            </details>
+            <details>
+                <summary>Destino dos materiais (%)</summary>
+                <div class="Tabela"><table id="tabDestinos"></table></div>
+            </details>
+            <details>
+                <summary>Fatores de emissão</summary>
+                <div class="Tabela"><table id="tabFatores"></table></div>
+            </details>
+            <p class="ModalMensagem" id="calcMensagem" role="status"></p>
+        </section>
     </main>
 </body>
 </html>

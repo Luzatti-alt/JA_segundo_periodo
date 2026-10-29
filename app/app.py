@@ -11,13 +11,14 @@ sys.path.append(dir_base)
 from flask import Flask, render_template, request, jsonify, send_file, abort
 from flasgger import Swagger, swag_from  # swagger em /apidocs
 from flask_cors import CORS
-from sqlalchemy import func,create_engine
+from sqlalchemy import func,create_engine, or_
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 import qrcode
 
-from app.data.db import session, Session, Veiculo, Pecas, Materiais, QRFiles
+from app.data.db import session, Session, ModeloVeiculo, Veiculo, Pecas, Materiais, QRFiles
+from app.data.doc.Calculos import *
 from app.data.doc.GerarDados import QR, IpLocal
 
 app = Flask(__name__)
@@ -102,6 +103,25 @@ def DownloadPDF(qr_id):
 
 #region dados
 #region ler
+@app.route("/VeiculoModelo", methods=["GET"])
+@swag_from("docs/VeiculoModeloGet.yml")
+def listar_veiculo_modelo():
+    s = get_session()
+    try:
+        return jsonify([{
+            "id": m.id,
+            "veiculo": m.veiculo,
+            "modelo": m.Modelo,
+            "ano": m.Ano,
+            "categoria": m.CategoriaVeiculo,
+            "massa total kg": m.MassaTotal,
+            "vida util anos": m.VidaUtilAnos,
+            "quilometragem km": m.Kilometragem,
+            "quantidade por modelos": m.QuantidadePorModelos,
+            "estado": m.Estado,
+        } for m in s.query(ModeloVeiculo).all()])
+    finally:
+        s.close()
 
 @app.route("/Veiculo", methods=["GET"])
 @swag_from("docs/VeiculoGet.yml")
@@ -110,80 +130,36 @@ def listar_veiculos():
     try:
         return jsonify([{
             "id": v.id,
+            "modelo_id": v.modelo_id,
             "veiculo": v.veiculo,
             "modelo": v.Modelo,
             "chassi": v.Chassi,
             "ano": v.Ano,
             "categoria": v.CategoriaVeiculo,
-            "massa_total_kg": v.MassaTotal,
-            "vida util anos": v.VidaUtilAnos,
-            "KMs":v.Kilometragem,
-            "quantidade Pecas": v.QuantidadePecas,
-            "quantidade por modelos": v.QuantidadePorModelos,
+            "massa total kg": v.MassaTotal,
+            "vida util anos": v.VidaUtilAnos,  # manter assim para aparecer corretamente
+            "KMs": v.Kilometragem,
+            "quilometragem km": v.Kilometragem,  # o formulário de editar lê esta chave
+            "quantidade Pecas": len(v.pecas),
             "estado": v.Estado,
         } for v in s.query(Veiculo).all()])
     finally:
         s.close()
 
-@app.route("/VeiculoModelo", methods=["GET"])
-@swag_from("docs/VeiculoModeloGet.yml")
-def listar_veiculo_modelo():
+@app.route("/Materiais", methods=["GET"])
+@swag_from("docs/MateriaisGet.yml")
+def listar_materiais():
     s = get_session()
     try:
-        modelos = s.query(Veiculo).filter(Veiculo.Chassi.is_(None)).all()
         return jsonify([{
-            "id": v.id,
-            "veiculo": v.veiculo,
-            "modelo": v.Modelo,
-            "ano": v.Ano,
-            "categoria": v.CategoriaVeiculo,
-            "massa_total_kg": v.MassaTotal,
-            "vida_util_anos": v.VidaUtilAnos,
-            "quilometragem_km": v.Kilometragem,
-            "quantidade_pecas": v.QuantidadePecas,
-            "quantidade_por_modelos": v.QuantidadePorModelos,
-            "estado": v.Estado,
-        } for v in modelos])
+            "id": m.id,
+            "peca_id": m.peca_id,
+            "categoria": m.Categoria,
+            "peso kg": m.Peso,
+        } for m in s.query(Materiais).all()])
     finally:
         s.close()
 
-@app.route("/VeiculoModelo", methods=["POST"])
-@swag_from("data/doc/swagger/VeiculoModeloPost.yml")
-def criar_veiculo_modelo():
-    s = get_session()
-    dados = request.get_json(silent=True) or {}
-    try:
-        modelo = Veiculo(
-            veiculo=dados.get("veiculo"),
-            Modelo=dados.get("modelo"),
-            Chassi=dados.get("chassi"), 
-            Ano=dados.get("ano") or None,
-            CategoriaVeiculo=dados.get("categoria"),
-            MassaTotal=dados.get("massa_total_kg"),
-            VidaUtilAnos=dados.get("vida_util_anos") or None,
-            Kilometragem=dados.get("quilometragem_km") or None,
-            QuantidadePorModelos=dados.get("quantidade_por_modelos") or 1,
-            Estado=dados.get("estado") or "Fim de vida",
-        )
-        s.add(modelo)
-        s.commit()
-        return jsonify({
-            "id": modelo.id,
-            "veiculo": modelo.veiculo,
-            "modelo": modelo.Modelo,
-            "ano": modelo.Ano,
-            "categoria": modelo.CategoriaVeiculo,
-            "massa_total_kg": modelo.MassaTotal,
-            "vida_util_anos": modelo.VidaUtilAnos,
-            "quilometragem_km": modelo.Kilometragem,
-            "quantidade_por_modelos": modelo.QuantidadePorModelos,
-            "estado": modelo.Estado,
-        }), 201
-    except Exception as e:
-        s.rollback()
-        return jsonify({"erro": str(e)}), 400
-    finally:
-        s.close()
 @app.route("/Componentes", methods=["GET"])
 @swag_from("docs/ComponentesGet.yml")
 def listar_componentes():
@@ -203,60 +179,142 @@ def listar_componentes():
     finally:
         s.close()
 
-
-@app.route("/Materiais", methods=["GET"])
-@swag_from("docs/MateriaisGet.yml")
-def listar_materiais():
-    s = get_session()
-    try:
-        return jsonify([{
-            "id": m.id,
-            "peca_id": m.peca_id,
-            "categoria": m.Categoria,
-            "peso kg": m.Peso,
-        } for m in s.query(Materiais).all()])
-    finally:
-        s.close()
-
 #endregion ler
 
 #region post
+@app.route("/VeiculoModelo", methods=["POST"])
+@swag_from("data/doc/swagger/VeiculoModeloPost.yml")
+def criar_veiculo_modelo():
+    s = get_session()
+    dados = request.get_json(silent=True) or {}
+    try:
+        modelo = ModeloVeiculo(
+            veiculo=dados.get("veiculo"),
+            Modelo=dados.get("modelo"),
+            Ano=dados.get("ano") or None,
+            CategoriaVeiculo=dados.get("categoria"),
+            MassaTotal=dados.get("massa_total_kg"),
+            VidaUtilAnos=dados.get("vida_util_anos") or None,
+            Kilometragem=dados.get("quilometragem_km") or None,
+            QuantidadePorModelos=dados.get("quantidade_por_modelos") or 1,
+            Estado=dados.get("estado") or "Fim de vida",
+        )
+        s.add(modelo)
+        s.commit()
+        return jsonify({"id": modelo.id}), 201
+    except Exception as e:
+        s.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        s.close()
+
 @app.route("/Veiculo", methods=["POST"])
 @swag_from("docs/veiculoCriar.yml")
 def criar_veiculo():
-    session = get_session()
-    dados = request.get_json()
+    s = get_session()
+    dados = request.get_json(silent=True) or {}
     try:
+        chassi = (dados.get("chassi") or "").strip()
+        if not chassi:
+            return jsonify({"erro": "Informe o chassi do veículo"}), 400
+        if s.query(Veiculo).filter(Veiculo.Chassi == chassi).first():
+            return jsonify({"erro": "Já existe um veículo com este chassi"}), 409
+
+        modelo_id = dados.get("modelo_base_id")
+        if modelo_id and s.get(ModeloVeiculo, modelo_id) is None:
+            return jsonify({"erro": "Modelo base não encontrado"}), 404
+
         veiculo = Veiculo(
+            modelo_id=modelo_id or None,
             veiculo=dados.get("veiculo"),
             Modelo=dados.get("modelo"),
-            Chassi=dados.get("chassi"),
-            Ano=dados.get("ano"),
+            Chassi=chassi,
+            Ano=dados.get("ano") or None,
             CategoriaVeiculo=dados.get("categoria"),
             MassaTotal=dados.get("massa_total_kg"),
-            VidaUtilAnos=dados.get("vida_util_anos"),
-            Kilometragem=dados.get("quilometragem_km"),
+            VidaUtilAnos=dados.get("vida_util_anos") or None,
+            Kilometragem=dados.get("quilometragem_km") or None,
             Estado=dados.get("estado") or "Fim de vida",
         )
-        session.add(veiculo)
-        session.commit()
-        resultado = {
-            "id": veiculo.id,
-            "veiculo": veiculo.veiculo,
-            "modelo": veiculo.Modelo,
-            "chassi": veiculo.Chassi,
-            "categoria": veiculo.CategoriaVeiculo,
-            "massa_total_kg": veiculo.MassaTotal,
-            "vida_util_anos": veiculo.VidaUtilAnos,
-            "quilometragem_km": veiculo.Kilometragem,
-            "estado": veiculo.Estado,
-        }
-        return jsonify(resultado), 201
+        s.add(veiculo)
+        s.commit()
+        return jsonify({"id": veiculo.id}), 201
     except Exception as e:
-        session.rollback()
+        s.rollback()
         return jsonify({"erro": str(e)}), 400
     finally:
-        session.close()
+        s.close()
+
+@app.route("/Componentes", methods=["POST"])
+@swag_from("docs/ComponentesPost.yml")
+def criar_componente():
+    s = get_session()
+    dados = request.get_json(silent=True) or {}
+    try:
+        if not dados.get("veiculo_id") or s.get(Veiculo, dados["veiculo_id"]) is None:
+            return jsonify({"erro": "Veículo não encontrado"}), 404
+        componente = Pecas(
+            veiculo_id=dados.get("veiculo_id"),
+            Categoria=dados.get("categoria"),
+            Peso=dados.get("peso_kg"),
+        )
+        s.add(componente)
+        s.commit()
+        return jsonify({"id": componente.id}), 201
+    except Exception as e:
+        s.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        s.close()
+
+@app.route("/Materiais", methods=["POST"])
+@swag_from("docs/MateriaisPost.yml")
+def criar_material():
+    s = get_session()
+    dados = request.get_json(silent=True) or {}
+    try:
+        if not dados.get("peca_id") or s.get(Pecas, dados["peca_id"]) is None:
+            return jsonify({"erro": "Peça não encontrada"}), 404
+        material = Materiais(
+            peca_id=dados.get("peca_id"),   # estava dados.get("veiculo_id")
+            Categoria=dados.get("categoria"),
+            Peso=dados.get("peso_kg"),
+        )
+        s.add(material)
+        s.commit()
+        return jsonify({"id": material.id}), 201
+    except Exception as e:
+        s.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        s.close()
+#endregion post
+
+#region put
+@app.route("/VeiculoModelo/<int:modelo_id>", methods=["PUT"])
+def editar_veiculo_modelo(modelo_id):
+    s = get_session()
+    dados = request.get_json(silent=True) or {}
+    try:
+        m = s.get(ModeloVeiculo, modelo_id)
+        if m is None:
+            return jsonify({"erro": "Modelo não encontrado"}), 404
+        campos = {
+            "veiculo": "veiculo", "modelo": "Modelo", "ano": "Ano",
+            "categoria": "CategoriaVeiculo", "massa_total_kg": "MassaTotal",
+            "vida_util_anos": "VidaUtilAnos", "quilometragem_km": "Kilometragem",
+            "quantidade_por_modelos": "QuantidadePorModelos", "estado": "Estado",
+        }
+        for chave, atributo in campos.items():
+            if chave in dados:
+                setattr(m, atributo, dados[chave])
+        s.commit()
+        return jsonify({"id": m.id}), 200
+    except Exception as e:
+        s.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        s.close()
 
 @app.route("/Veiculo/<int:veiculo_id>", methods=["PUT"])
 def editar_veiculo(veiculo_id):
@@ -266,17 +324,75 @@ def editar_veiculo(veiculo_id):
         v = s.get(Veiculo, veiculo_id)
         if v is None:
             return jsonify({"erro": "Veículo não encontrado"}), 404
-        v.veiculo = dados.get("veiculo", v.veiculo)
-        v.Modelo = dados.get("modelo", v.Modelo)
-        v.Chassi = dados.get("chassi") or v.Chassi
-        v.Ano = dados.get("ano") or v.Ano
-        v.CategoriaVeiculo = dados.get("categoria", v.CategoriaVeiculo)
-        v.MassaTotal = dados.get("massa_total_kg", v.MassaTotal)
-        v.VidaUtilAnos = dados.get("vida_util_anos", v.VidaUtilAnos)
-        v.Kilometragem = dados.get("quilometragem_km", v.Kilometragem)
-        v.Estado = dados.get("estado", v.Estado)
+        campos = {
+            "veiculo": "veiculo", "modelo": "Modelo", "chassi": "Chassi", "ano": "Ano",
+            "categoria": "CategoriaVeiculo", "massa_total_kg": "MassaTotal",
+            "vida_util_anos": "VidaUtilAnos", "quilometragem_km": "Kilometragem",
+            "estado": "Estado",
+        }
+        for chave, atributo in campos.items():
+            if chave == "chassi" and not dados.get("chassi"):
+                continue  # chassi não pode ficar vazio
+            if chave in dados:
+                setattr(v, atributo, dados[chave])
         s.commit()
         return jsonify({"id": v.id}), 200
+    except Exception as e:
+        s.rollback()  # chassi repetido cai aqui (UNIQUE)
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        s.close()
+
+@app.route("/Componentes/<int:peca_id>", methods=["PUT"])
+def editar_componente(peca_id):
+    s = get_session()
+    dados = request.get_json(silent=True) or {}
+    try:
+        p = s.get(Pecas, peca_id)
+        if p is None:
+            return jsonify({"erro": "Componente não encontrado"}), 404
+        p.veiculo_id = dados.get("veiculo_id", p.veiculo_id)
+        p.Categoria = dados.get("categoria", p.Categoria)
+        p.Peso = dados.get("peso_kg", p.Peso)
+        s.commit()
+        return jsonify({"id": p.id}), 200
+    except Exception as e:
+        s.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        s.close()
+
+@app.route("/Materiais/<int:material_id>", methods=["PUT"])
+def editar_material(material_id):
+    s = get_session()
+    dados = request.get_json(silent=True) or {}
+    try:
+        m = s.get(Materiais, material_id)
+        if m is None:
+            return jsonify({"erro": "Material não encontrado"}), 404
+        m.peca_id = dados.get("peca_id", m.peca_id)
+        m.Categoria = dados.get("categoria", m.Categoria)
+        m.Peso = dados.get("peso_kg", m.Peso)
+        s.commit()
+        return jsonify({"id": m.id}), 200
+    except Exception as e:
+        s.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        s.close()
+#endregion put
+
+#region delete
+@app.route("/VeiculoModelo/<int:modelo_id>", methods=["DELETE"])
+def remover_veiculo_modelo(modelo_id):
+    s = get_session()
+    try:
+        m = s.get(ModeloVeiculo, modelo_id)
+        if m is None:
+            return jsonify({"erro": "Modelo não encontrado"}), 404
+        s.delete(m)   # os veículos ligados ficam, só perdem o modelo_id
+        s.commit()
+        return "", 204
     except Exception as e:
         s.rollback()
         return jsonify({"erro": str(e)}), 400
@@ -299,58 +415,171 @@ def remover_veiculo(veiculo_id):
     finally:
         s.close()
 
-@app.route("/Componentes", methods=["POST"])
-@swag_from("docs/ComponentesPost.yml")
-def criar_componente():
-    session = get_session()
-    dados = request.get_json()
+@app.route("/Materiais/<int:material_id>", methods=["DELETE"])
+def remover_material(material_id):
+    s = get_session()
     try:
-        componente = Pecas(
-            veiculo_id=dados.get("veiculo_id"),
-            Categoria=dados.get("categoria"),
-            Peso=dados.get("peso_kg"),
-        )
-        session.add(componente)
-        session.commit()
-        resultado = {
-            "id": componente.id,
-            "veiculo_id": componente.veiculo_id,
-            "categoria": componente.Categoria,
-            "peso_kg": componente.Peso,
-        }
-        return jsonify(resultado), 201
+        m = s.get(Materiais, material_id)
+        if m is None:
+            return jsonify({"erro": "Material não encontrado"}), 404
+        s.delete(m)
+        s.commit()
+        return jsonify({"ok": True}), 200
     except Exception as e:
-        session.rollback()
+        s.rollback()
         return jsonify({"erro": str(e)}), 400
     finally:
-        session.close()
+        s.close()
 
-
-@app.route("/Materiais", methods=["POST"])
-@swag_from("docs/MateriaisPost.yml")
-def criar_material():
-    session = get_session()
-    dados = request.get_json()
+@app.route("/Componentes/<int:peca_id>", methods=["DELETE"])
+def remover_componente(peca_id):
+    s = get_session()
     try:
-        material = Materiais(
-            peca_id=dados.get("veiculo_id"),
-            Categoria=dados.get("categoria"),
-            Peso=dados.get("peso_kg"),
-        )
-        session.add(material)
-        session.commit()
-        return jsonify({
-            "id": material.id,
-            "peca_id": material.peca_id,
-            "categoria": material.Categoria,
-            "peso_kg": material.Peso,
-        }), 201
+        p = s.get(Pecas, peca_id)
+        if p is None:
+            return jsonify({"erro": "Componente não encontrado"}), 404
+        s.delete(p)
+        s.commit()
+        return jsonify({"ok": True}), 200
     except Exception as e:
-        session.rollback()
+        s.rollback()
         return jsonify({"erro": str(e)}), 400
     finally:
-        session.close()
-#endregion post
+        s.close()
+#endregion delete
+#region calculos
+def _calc(veiculo_id, parte="resumo"):
+    s = get_session()
+    try:
+        r = Calculo.Veiculo(s, veiculo_id, parte)
+        if r is None:
+            return jsonify({"erro": "Veículo não encontrado"}), 404
+        return jsonify(r)
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        s.close()
+ 
+@app.route("/Calculos/<int:veiculo_id>", methods=["GET"])
+def calculo_resumo(veiculo_id):
+    return _calc(veiculo_id)
+ 
+@app.route("/Calculos/<int:veiculo_id>/cenarios", methods=["GET"])
+def calculo_cenarios(veiculo_id):
+    return _calc(veiculo_id, "cenarios")
+ 
+@app.route("/Calculos/<int:veiculo_id>/sensibilidade", methods=["GET"])
+def calculo_sensibilidade(veiculo_id):
+    return _calc(veiculo_id, "sensibilidade")
+ 
+# ---- atividade do veículo
+@app.route("/Atividade/<int:veiculo_id>", methods=["GET"])
+def ler_atividade(veiculo_id):
+    s = get_session()
+    try:
+        atividade, _ = Calculo.Atividade(s, veiculo_id)
+        return jsonify(atividade)
+    finally:
+        s.close()
+ 
+@app.route("/Atividade/<int:veiculo_id>", methods=["PUT"])
+def salvar_atividade(veiculo_id):
+    s = get_session()
+    try:
+        if s.get(Veiculo, veiculo_id) is None:
+            return jsonify({"erro": "Veículo não encontrado"}), 404
+        dados = request.get_json(silent=True) or {}
+        a = s.query(AtividadeVeiculo).filter_by(veiculo_id=veiculo_id).first()
+        if a is None:
+            a = AtividadeVeiculo(veiculo_id=veiculo_id)
+            s.add(a)
+        for campo in ATIVIDADE_PADRAO:
+            if campo in dados:
+                v = float(dados[campo])
+                if v < 0:
+                    return jsonify({"erro": f"{campo} não pode ser negativo"}), 400
+                setattr(a, campo, v)
+        s.commit()
+        return jsonify({"ok": True})
+    except Exception as e:
+        s.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        s.close()
+ 
+# ---- destinos dos materiais (banco + padrão do PDF para o que faltar)
+@app.route("/Destinos", methods=["GET"])
+def listar_destinos():
+    s = get_session()
+    try:
+        _, destinos = Calculo.Parametros(s)
+        return jsonify([{"material": g, "reciclagem": destinos[g][0], "reuso": destinos[g][1],
+                         "valorizacao": destinos[g][2], "disposicao": destinos[g][3]}
+                        for g in GRUPOS])
+    finally:
+        s.close()
+ 
+@app.route("/Destinos/<material>", methods=["PUT"])
+def salvar_destino(material):
+    if material not in GRUPOS:
+        return jsonify({"erro": "Material desconhecido"}), 404
+    s = get_session()
+    try:
+        d = request.get_json(silent=True) or {}
+        cols = ("reciclagem", "reuso", "valorizacao", "disposicao")
+        vals = [float(d.get(c, 0)) for c in cols]
+        if any(v < 0 for v in vals) or abs(sum(vals) - 100) > 0.01:
+            return jsonify({"erro": f"Os quatro destinos devem somar 100% (soma atual: {sum(vals):g})"}), 400
+        reg = s.get(DestinoMaterial, material) or DestinoMaterial(material=material)
+        for c, v in zip(cols, vals):
+            setattr(reg, c, v)
+        s.add(reg)
+        s.commit()
+        return jsonify({"ok": True})
+    except Exception as e:
+        s.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        s.close()
+ 
+
+@app.route("/Fatores", methods=["GET"])
+def listar_fatores():
+    s = get_session()
+    try:
+        banco = {f.chave: f for f in s.query(FatorEmissao).all()}
+        saida = []
+        for chave, valor, unidade, origem in FATORES_PADRAO:
+            f = banco.get(chave)
+            saida.append({"chave": chave, "valor": f.valor if f else valor,
+                          "unidade": unidade, "origem": (f.origem if f else origem)})
+        return jsonify(saida)
+    finally:
+        s.close()
+ 
+@app.route("/Fatores/<path:chave>", methods=["PUT"])
+def salvar_fator(chave):
+    padrao = {c: (v, u, o) for c, v, u, o in FATORES_PADRAO}
+    if chave not in padrao:
+        return jsonify({"erro": "Fator desconhecido"}), 404
+    s = get_session()
+    try:
+        d = request.get_json(silent=True) or {}
+        valor = float(d.get("valor"))
+        if valor < 0:
+            return jsonify({"erro": "O valor não pode ser negativo"}), 400
+        reg = s.get(FatorEmissao, chave) or FatorEmissao(chave=chave, unidade=padrao[chave][1])
+        reg.valor = valor
+        reg.origem = d.get("origem") or padrao[chave][2]
+        s.add(reg)
+        s.commit()
+        return jsonify({"ok": True})
+    except Exception as e:
+        s.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        s.close()
+#endregion calculos
 #endregion dados
 #region rodar
 if __name__ == "__main__":

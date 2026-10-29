@@ -23,7 +23,7 @@ header{
     align-items: center;
     margin-bottom: 2vh;
 }
-h1{
+h1, h2{
     color: white;
 }
 nav{

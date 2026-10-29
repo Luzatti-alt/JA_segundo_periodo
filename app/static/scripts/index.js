@@ -225,10 +225,14 @@ form.addEventListener("submit", async e => {
     }
 
     const url = acaoAtual === "adicionar" ? rota : `${rota}/${id}`;
-    const opcoes = { method: metodo };
-    if (acaoAtual !== "remover") opcoes.body = JSON.stringify(lerCampos());
+const opcoes = { method: metodo };
+if (acaoAtual !== "remover") {
+    const corpo = lerCampos();
+    if (usaModeloBase()) corpo.modelo_base_id = id;
+    opcoes.body = JSON.stringify(corpo);
+}
 
-    btnConfirmar.disabled = true;
+btnConfirmar.disabled = true;
     try {
         await api(url, opcoes);
         form.reset();
