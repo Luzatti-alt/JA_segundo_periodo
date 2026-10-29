@@ -1,6 +1,7 @@
 import os
 import socket
 from datetime import datetime
+from functools import lru_cache
 from io import BytesIO
 
 import qrcode
@@ -34,54 +35,54 @@ def IpLocal():
         s.close()
 #endregion apilocal
 
+@lru_cache(maxsize=512)
+def PngBytes(link: str) -> bytes:
+    #PNG do QR gerado em memória. O cache evita refazer o mesmo link (alguns KB cada)."""
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L,
+                       box_size=10, border=4)
+    qr.add_data(link)
+    qr.make(fit=True)
+    buf = BytesIO()
+    qr.make_image(fill_color='black', back_color='white').save(buf, format='PNG')
+    return buf.getvalue()
+
+
 class QR:
     @staticmethod
-    def _SalvarPng(base_url: str, qr_id: int) -> str:
-        #Gera o PNG do QR com o link atual e devolve o caminho.
-        link = f'{base_url}/download/{qr_id}'
-        qr = qrcode.QRCode(version=1,
-                           error_correction=qrcode.constants.ERROR_CORRECT_L,
-                           box_size=10, border=4)
-        qr.add_data(link)
-        qr.make(fit=True)
-        img = qr.make_image(fill_color='black', back_color='white')
+    def BaseUrl(host=None) -> str:
+        if not host or host.startswith(("127.0.0.1", "localhost")):
+            host = f"{IpLocal()}:5000"
+        return f"http://{host}"
 
-        caminho = os.path.join(PASTA_QRS, f'qr_{qr_id}.png')
-        img.save(caminho)
-        return caminho
     @staticmethod
-    def Gerar(base_url: str, data: str = '', veiculo_id=None,
-              peca_id=None, material_id=None):
-        os.makedirs(PASTA_QRS, exist_ok=True)
+    def Png(base_url: str, qr_id: int) -> BytesIO:
+       #QR sob demanda(nada é gravado em disco)
+        return BytesIO(PngBytes(f"{base_url}/download/{qr_id}"))
 
+    @staticmethod
+    def Gerar(base_url=None, data: str = '', veiculo_id=None, peca_id=None, material_id=None):
+       #base_url é ignorado (mantido para não quebrar quem já chama). Só cria o registro; a imagem é montada quando alguém pede /QR/<id>/imagem
         registro = QRFiles(path='', data=data, veiculo_id=veiculo_id,
                            peca_id=peca_id, material_id=material_id)
         session.add(registro)
-        session.flush()  # gera o registro.id
-
-        registro.path = QR._SalvarPng(base_url, registro.id)
         session.commit()
         return registro.id
+
     @staticmethod
     def RegerarTodos(base_url=None, limpar_expirados=True):
-        #Apaga os PNGs de temp e regera todos com o IP atual
-        base_url = base_url or f"http://{IpLocal()}:5000"
-        os.makedirs(PASTA_QRS, exist_ok=True)
-
+       #Mantida por compatibilidade: limpa expirados, apaga PNGs antigos de temp/ e zera o cache.
         removidos = PDF.ApagarExpirados() if limpar_expirados else 0
-
-        for nome in os.listdir(PASTA_QRS):
-            if nome.lower().endswith(".png"):
-                os.remove(os.path.join(PASTA_QRS, nome))
-
-        registros = session.query(QRFiles).all()
-        for r in registros:
-            r.path = QR._SalvarPng(base_url, r.id)
+        if os.path.isdir(PASTA_QRS):
+            for nome in os.listdir(PASTA_QRS):
+                if nome.lower().endswith(".png"):
+                    os.remove(os.path.join(PASTA_QRS, nome))
+        PngBytes.cache_clear()
+        total = session.query(QRFiles).update({QRFiles.path: ''})
         session.commit()
+        print(f"QRs cadastrados: {total} | expirados removidos: {removidos}")
+        print(f"Base URL dos QRs: {base_url or QR.BaseUrl()}")
+        return total
 
-        print(f"QRs regerados: {len(registros)} | expirados removidos: {removidos}")
-        print(f"Base URL dos QRs: {base_url}")
-        return len(registros)
     @staticmethod
     def QrLido(qr_id: int):
         with Session() as s:
@@ -119,7 +120,6 @@ class PDF:
 
     @staticmethod
     def ApagarExpirados():
-        """Remove registros/PNGs de QRs expirados (ExpiraEm < agora)."""
         expirados = session.query(QRFiles).filter(QRFiles.ExpiraEm < datetime.now()).all()
         for r in expirados:
             if r.path and os.path.exists(r.path):

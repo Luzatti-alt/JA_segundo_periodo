@@ -8,10 +8,10 @@ else:
 
 sys.path.append(dir_base)
 
-from flask import Flask, render_template, request, jsonify, send_file, abort
+from flask import Flask, render_template, request, jsonify, send_file, abort, url_for
 from flasgger import Swagger, swag_from  # swagger em /apidocs
 from flask_cors import CORS
-from sqlalchemy import func,create_engine, or_
+from sqlalchemy import func, create_engine, or_, cast, String
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
@@ -63,42 +63,72 @@ def Calculos():
 
 #endregion Interface
 #region QR
+def _filtrar_qrs(s):
+    """Query de QRs filtrada por ?q= (várias palavras, todas precisam casar), ?estado=, ?ano=, ?categoria=."""
+    q = s.query(QRFiles).outerjoin(Veiculo, QRFiles.veiculo_id == Veiculo.id)
+    for palavra in (request.args.get("q") or "").split():
+        like = f"%{palavra.lstrip('#')}%"
+        cond = [Veiculo.veiculo.ilike(like), Veiculo.Modelo.ilike(like), Veiculo.Chassi.ilike(like),
+                Veiculo.CategoriaVeiculo.ilike(like), Veiculo.Estado.ilike(like),
+                cast(Veiculo.Ano, String).ilike(like), QRFiles.data.ilike(like)]
+        if palavra.lstrip("#").isdigit():
+            n = int(palavra.lstrip("#"))
+            cond += [QRFiles.id == n, Veiculo.id == n]
+        q = q.filter(or_(*cond))
+    if request.args.get("estado"):
+        q = q.filter(Veiculo.Estado == request.args["estado"])
+    if request.args.get("ano"):
+        q = q.filter(cast(Veiculo.Ano, String) == request.args["ano"])
+    if request.args.get("categoria"):
+        q = q.filter(Veiculo.CategoriaVeiculo == request.args["categoria"])
+    return q.order_by(QRFiles.id)
+ 
+def _opcoes_filtro(s):
+    col = lambda c: sorted({x[0] for x in s.query(c).distinct() if x[0] not in (None, "")}, key=str)
+    return {"estados": col(Veiculo.Estado), "anos": col(Veiculo.Ano), "categorias": col(Veiculo.CategoriaVeiculo)}
+ 
 @app.route("/QR", methods=["GET"])
 @app.route("/qr", methods=["GET"])
-@swag_from("app/data/doc/swagger/qr_lista.yml")
 def QRLista():
     with Session() as s:
-        qrs = s.query(QRFiles).order_by(QRFiles.id).all()
-        return render_template("QRGerado.html", qrs=qrs)
-
-
+        qrs = _filtrar_qrs(s).all()
+        return render_template("QRGerado.html", qrs=qrs, filtros=_opcoes_filtro(s))
+ 
+@app.route("/QR/buscar", methods=["GET"])          # JSON para campos de busca/autocomplete
+def QRBuscar():
+    limite = min(request.args.get("limite", 30, type=int), 100)
+    with Session() as s:
+        itens = []
+        for r in _filtrar_qrs(s).limit(limite).all():
+            v = r.veiculo
+            itens.append({"id": r.id, "veiculo_id": r.veiculo_id,
+                          "titulo": f"{v.veiculo} {v.Modelo}" if v else (r.data or f"QR #{r.id}"),
+                          "chassi": v.Chassi if v else None, "ano": v.Ano if v else None,
+                          "estado": v.Estado if v else None,
+                          "imagem": url_for("QRImagem", qr_id=r.id),
+                          "pdf": url_for("DownloadPDF", qr_id=r.id)})
+        return jsonify(itens)
+ 
+ 
 @app.route("/QR/<int:qr_id>/imagem", methods=["GET"])
 def QRImagem(qr_id):
     with Session() as s:
-        if s.get(QRFiles, qr_id) is None:
+        if s.query(QRFiles.id).filter_by(id=qr_id).first() is None:
             abort(404)
-
-    host = request.host
-    if host.startswith(("127.0.0.1", "localhost")):
-        host = f"{IpLocal()}:5000"      # celular não alcança localhost
-
-    img = qrcode.make(f"http://{host}/download/{qr_id}", box_size=10, border=4)
-    buf = BytesIO()                      # BytesIO já está importado no seu app.py
-    img.save(buf, format="PNG")
-    buf.seek(0)
-    resp = send_file(buf, mimetype="image/png", max_age=0)
-    resp.headers["Cache-Control"] = "no-store"
+    baixar = request.args.get("baixar") in ("1", "true", "sim")
+    resp = send_file(QR.Png(QR.BaseUrl(request.host), qr_id), mimetype="image/png",
+                     as_attachment=baixar, download_name=f"qr_{qr_id}.png")
+    resp.headers["Cache-Control"] = "no-store"     # o conteúdo muda se o IP da máquina mudar
     return resp
-
+ 
 @app.route("/download/<int:qr_id>", methods=["GET"])  # rota que o QR aponta
 def DownloadPDF(qr_id):
     pdf = QR.QrLido(qr_id)
     if pdf is None:
         abort(404)
     return send_file(pdf, mimetype="application/pdf",
-                     download_name=f"relatorio_qr_{qr_id}.pdf",
-                     as_attachment=True)
-#pesquisar qr (a fazer)
+                     download_name=f"relatorio_qr_{qr_id}.pdf", as_attachment=True)
+
 #endregion QR
 
 #region dados

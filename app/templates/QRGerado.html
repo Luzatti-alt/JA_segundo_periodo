@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="../static/styles/QR.css">
     <link rel="stylesheet" href="../static/styles/base.css">
     <title>QR gerado</title>
+    <script src="../static/scripts/QRBusca.js" defer></script>
 </head>
 <body>
     <header>
@@ -19,39 +20,44 @@
             <a href="{{url_for('Calculos')}}" aria-current="page">Calculos</a>
         </nav>
     </header>
-    <div class="Menu">
-        <div class="controle">
+    <div class="controle">
             <h1>Controle QR</h1>
             <div class="controleQR">
-                <select name="qr_id" id="qr_id">
-                    {% for q in qrs %}
-                    <option value="{{ q.id }}">#{{ q.id }} - {{ q.data }}</option>
-                    {% endfor %}
-                </select><!--lista/id do QR-->
-                <button>imprimr QR</button>
-                <button>excluir QR</button>
+                <form id="qrFiltro" method="get" action="{{ url_for('QRLista') }}" class="QRFiltro">
+                    <input type="search" name="q" value="{{ request.args.get('q', '') }}"
+                           placeholder="Buscar por chassi, modelo, ano, #id..." autocomplete="off">
+                    <select name="estado">
+                        <option value="">Todos os estados</option>
+                        {% for e in filtros.estados %}<option value="{{ e }}" {{ 'selected' if request.args.get('estado') == e }}>{{ e }}</option>{% endfor %}
+                    </select>
+                    <select name="ano">
+                        <option value="">Todos os anos</option>
+                        {% for a in filtros.anos %}<option value="{{ a }}" {{ 'selected' if request.args.get('ano') == a|string }}>{{ a }}</option>{% endfor %}
+                    </select>
+                    <select name="categoria">
+                        <option value="">Todas as categorias</option>
+                        {% for c in filtros.categorias %}<option value="{{ c }}" {{ 'selected' if request.args.get('categoria') == c }}>{{ c }}</option>{% endfor %}
+                    </select>
+                    <noscript><button type="submit">Filtrar</button></noscript>
+                </form>
             </div>
         </div>
-        <div class="pesquisar">
-            <h1>Pesquisar QRS</h1>
-            <div class="barrapesquisa">
-                <input type="text">
-                <button>Pesquisar</button>
-            </div>
-    </div>
-    </div>
-    <!--
-    <p>Arquivo no banco: <code>{{ path }}</code></p>
-    <p>Arquivo existe no disco: {{ 'sim' if existe else 'não' }}</p>
-    <p>Link do download: <a href="{{ link }}">{{ link }}</a></p>
-    -->
-    <div class="ListaQR">
-        {% for q in qrs %}
-        <div class="item">
-            <img src="{{ url_for('QRImagem', qr_id=q.id) }}" width="180">
-            <br>#{{ q.id }} - {{ q.data }}
-        </div>
-        {% endfor %}
+    <div id="listaQR">
+            {% for qr in qrs %}
+            {% set v = qr.veiculo %}
+            <article class="QRCartao">
+                <img src="{{ url_for('QRImagem', qr_id=qr.id) }}" alt="QR #{{ qr.id }}" loading="lazy">
+                <strong>#{{ qr.id }}{% if v %} · {{ v.veiculo }} {{ v.Modelo }}{% endif %}</strong>
+                {% if v %}<small>{{ v.Chassi }} · {{ v.Ano }} · {{ v.Estado }}</small>
+                {% elif qr.data %}<small>{{ qr.data }}</small>{% endif %}
+                <div class="QRAcoes">
+                    <a href="{{ url_for('QRImagem', qr_id=qr.id, baixar=1) }}">Baixar QR (PNG)</a>
+                    <a href="{{ url_for('DownloadPDF', qr_id=qr.id) }}">Baixar PDF</a>
+                </div>
+            </article>
+            {% else %}
+            <p>Nenhum QR encontrado.</p>
+            {% endfor %}
         </div>
 </body>
 </html>
