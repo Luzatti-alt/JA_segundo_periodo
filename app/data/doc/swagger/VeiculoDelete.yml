@@ -1,0 +1,24 @@
+tags:
+- Veículos
+summary: Remove um veículo
+produces:
+- application/json
+parameters:
+- name: veiculo_id
+  in: path
+  required: true
+  type: integer
+  description: ID do veículo
+responses:
+  204:
+    description: Removido (sem corpo)
+  400:
+    description: Erro ao remover
+    schema: &id001
+      type: object
+      properties:
+        erro:
+          type: string
+  404:
+    description: Veículo não encontrado
+    schema: *id001

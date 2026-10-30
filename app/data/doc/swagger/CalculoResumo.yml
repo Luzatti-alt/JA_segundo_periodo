@@ -1,0 +1,30 @@
+tags:
+- Cálculos
+summary: Resumo do cálculo de pegada de carbono do veículo
+description: Retorna o resumo do cálculo.
+produces:
+- application/json
+parameters:
+- name: veiculo_id
+  in: path
+  required: true
+  type: integer
+  description: ID do veículo
+responses:
+  200:
+    description: Resultado do cálculo
+    schema:
+      type: object
+      properties: {}
+      additionalProperties: true
+      description: Estrutura devolvida por Calculo.Veiculo()
+  400:
+    description: Erro no cálculo
+    schema: &id001
+      type: object
+      properties:
+        erro:
+          type: string
+  404:
+    description: Veículo não encontrado
+    schema: *id001

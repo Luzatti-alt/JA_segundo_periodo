@@ -1,0 +1,33 @@
+tags:
+- Modelos de veículo
+summary: Lista todos os modelos de veículo
+produces:
+- application/json
+responses:
+  200:
+    description: Lista de modelos
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          veiculo:
+            type: string
+          modelo:
+            type: string
+          ano:
+            type: integer
+          categoria:
+            type: string
+          massa total kg:
+            type: number
+          vida util anos:
+            type: number
+          quilometragem km:
+            type: number
+          quantidade por modelos:
+            type: integer
+          estado:
+            type: string

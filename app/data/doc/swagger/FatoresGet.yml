@@ -1,0 +1,21 @@
+tags:
+- Fatores de emissão
+summary: Lista os fatores de emissão
+produces:
+- application/json
+responses:
+  200:
+    description: Fatores (banco + padrão)
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          chave:
+            type: string
+          valor:
+            type: number
+          unidade:
+            type: string
+          origem:
+            type: string

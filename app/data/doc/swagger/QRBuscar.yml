@@ -1,0 +1,51 @@
+tags:
+- QR Code
+summary: Busca QR Codes (JSON para autocomplete)
+produces:
+- application/json
+parameters:
+- name: q
+  in: query
+  type: string
+  description: Palavras de busca (todas precisam casar)
+- name: estado
+  in: query
+  type: string
+- name: ano
+  in: query
+  type: string
+- name: categoria
+  in: query
+  type: string
+- name: limite
+  in: query
+  type: integer
+  default: 30
+  maximum: 100
+  description: Máximo 100
+responses:
+  200:
+    description: QR Codes encontrados
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          veiculo_id:
+            type: integer
+          titulo:
+            type: string
+          chassi:
+            type: string
+          ano:
+            type: integer
+          estado:
+            type: string
+          imagem:
+            type: string
+            description: URL da imagem PNG
+          pdf:
+            type: string
+            description: URL do PDF do relatório

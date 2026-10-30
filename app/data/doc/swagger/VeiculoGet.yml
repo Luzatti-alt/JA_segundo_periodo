@@ -1,0 +1,39 @@
+tags:
+- Veículos
+summary: Lista todos os veículos
+produces:
+- application/json
+responses:
+  200:
+    description: Lista de veículos
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          modelo_id:
+            type: integer
+          veiculo:
+            type: string
+          modelo:
+            type: string
+          chassi:
+            type: string
+          ano:
+            type: integer
+          categoria:
+            type: string
+          massa total kg:
+            type: number
+          vida util anos:
+            type: number
+          KMs:
+            type: number
+          quilometragem km:
+            type: number
+          quantidade Pecas:
+            type: integer
+          estado:
+            type: string

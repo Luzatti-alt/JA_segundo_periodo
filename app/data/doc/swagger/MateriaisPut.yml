@@ -1,0 +1,46 @@
+tags:
+- Materiais
+summary: Edita um material
+consumes: &id001
+- application/json
+produces: *id001
+parameters:
+- name: material_id
+  in: path
+  required: true
+  type: integer
+  description: ID do material
+- name: body
+  in: body
+  required: true
+  description: Envie só os campos que quer alterar
+  schema:
+    type: object
+    properties:
+      peca_id:
+        type: integer
+        example: 1
+      categoria:
+        type: string
+        example: Aço
+      peso_kg:
+        type: number
+        example: 35.2
+responses:
+  200:
+    description: Material atualizado
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+  400:
+    description: Dados inválidos
+    schema: &id002
+      type: object
+      properties:
+        erro:
+          type: string
+  404:
+    description: Material não encontrado
+    schema: *id002

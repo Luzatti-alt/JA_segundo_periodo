@@ -1,0 +1,28 @@
+tags:
+- Destinos dos materiais
+summary: Lista os destinos (%) de cada grupo de material
+produces:
+- application/json
+responses:
+  200:
+    description: Destinos por material
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          material:
+            type: string
+            example: Aço
+          reciclagem:
+            type: number
+            example: 60
+          reuso:
+            type: number
+            example: 10
+          valorizacao:
+            type: number
+            example: 20
+          disposicao:
+            type: number
+            example: 10

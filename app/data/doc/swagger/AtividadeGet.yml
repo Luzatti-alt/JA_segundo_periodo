@@ -1,0 +1,22 @@
+tags:
+- Atividade do veículo
+summary: Lê os parâmetros de atividade do veículo
+produces:
+- application/json
+parameters:
+- name: veiculo_id
+  in: path
+  required: true
+  type: integer
+  description: ID do veículo
+responses:
+  200:
+    description: Parâmetros de atividade (padrão + valores salvos)
+    schema:
+      type: object
+      properties: {}
+      additionalProperties:
+        type: number
+      description: Parâmetros de atividade (chaves definidas em ATIVIDADE_PADRAO). Valores numéricos >=
+        0.
+      example: {}

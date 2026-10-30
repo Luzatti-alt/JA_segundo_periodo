@@ -220,7 +220,7 @@ def ExData(base_url=None):
     id_exp = QR.Gerar(base_url, data="QR expirado (teste)", veiculo_id=veiculos[0].id)
     exp = session.get(QRFiles, id_exp)
     exp.CriadoEm = datetime.now() - timedelta(hours=5)
-    exp.ExpiraEm = datetime.now() - timedelta(hours=3)
+    exp.ExpiraEm = datetime.now() - timedelta(hours=2160)
     session.commit()
     ids.append(id_exp)
 

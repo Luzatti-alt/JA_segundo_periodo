@@ -17,7 +17,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 import qrcode
 
-from app.data.db import session, Session, ModeloVeiculo, Veiculo, Pecas, Materiais, QRFiles
+from app.data.db import session, Session, ModeloVeiculo, Veiculo, Pecas, Materiais, QRFiles, AtividadeVeiculo, DestinoMaterial, FatorEmissao 
 from app.data.doc.Calculos import *
 from app.data.doc.GerarDados import QR, IpLocal
 
@@ -36,8 +36,13 @@ app.config['SWAGGER'] = {
 }
 Swagger(app)  # fica em /apidocs
 
-def get_session():
+def GetSession():
     return Session()
+
+def GarantirQRs():
+    with Session() as s:
+        for v in s.query(Veiculo).filter(~Veiculo.qrs.any()).all():
+            QR.Gerar(data=f"{v.veiculo} {v.Modelo} | Chassi: {v.Chassi}", veiculo_id=v.id)
 #endregion baseSistema
 
 #region Interface
@@ -51,7 +56,7 @@ def Dados():
 
 @app.route("/QR/<int:qr_id>", methods=["GET"])
 def QRGeradoPagina(qr_id):
-    s = get_session()
+    s = GetSession()
     registro = s.get(QRFiles, qr_id)
     if registro is None:
         abort(404)
@@ -63,8 +68,8 @@ def Calculos():
 
 #endregion Interface
 #region QR
-def _filtrar_qrs(s):
-    """Query de QRs filtrada por ?q= (várias palavras, todas precisam casar), ?estado=, ?ano=, ?categoria=."""
+def FiltrarQRs(s):
+    #Query de QRs filtrada por ?q= (várias palavras, todas precisam casar), ?estado=, ?ano=, ?categoria=.
     q = s.query(QRFiles).outerjoin(Veiculo, QRFiles.veiculo_id == Veiculo.id)
     for palavra in (request.args.get("q") or "").split():
         like = f"%{palavra.lstrip('#')}%"
@@ -83,7 +88,7 @@ def _filtrar_qrs(s):
         q = q.filter(Veiculo.CategoriaVeiculo == request.args["categoria"])
     return q.order_by(QRFiles.id)
  
-def _opcoes_filtro(s):
+def OpcoesFiltro(s):
     col = lambda c: sorted({x[0] for x in s.query(c).distinct() if x[0] not in (None, "")}, key=str)
     return {"estados": col(Veiculo.Estado), "anos": col(Veiculo.Ano), "categorias": col(Veiculo.CategoriaVeiculo)}
  
@@ -91,15 +96,16 @@ def _opcoes_filtro(s):
 @app.route("/qr", methods=["GET"])
 def QRLista():
     with Session() as s:
-        qrs = _filtrar_qrs(s).all()
-        return render_template("QRGerado.html", qrs=qrs, filtros=_opcoes_filtro(s))
+        qrs = FiltrarQRs(s).all()
+        return render_template("QRGerado.html", qrs=qrs, filtros=OpcoesFiltro(s))
  
 @app.route("/QR/buscar", methods=["GET"])          # JSON para campos de busca/autocomplete
+@swag_from("data/doc/swagger/QRBuscar.yml")
 def QRBuscar():
     limite = min(request.args.get("limite", 30, type=int), 100)
     with Session() as s:
         itens = []
-        for r in _filtrar_qrs(s).limit(limite).all():
+        for r in FiltrarQRs(s).limit(limite).all():
             v = r.veiculo
             itens.append({"id": r.id, "veiculo_id": r.veiculo_id,
                           "titulo": f"{v.veiculo} {v.Modelo}" if v else (r.data or f"QR #{r.id}"),
@@ -111,6 +117,7 @@ def QRBuscar():
  
  
 @app.route("/QR/<int:qr_id>/imagem", methods=["GET"])
+@swag_from("data/doc/swagger/QRImagem.yml")
 def QRImagem(qr_id):
     with Session() as s:
         if s.query(QRFiles.id).filter_by(id=qr_id).first() is None:
@@ -122,6 +129,7 @@ def QRImagem(qr_id):
     return resp
  
 @app.route("/download/<int:qr_id>", methods=["GET"])  # rota que o QR aponta
+@swag_from("data/doc/swagger/DownloadPDF.yml")
 def DownloadPDF(qr_id):
     pdf = QR.QrLido(qr_id)
     if pdf is None:
@@ -134,9 +142,9 @@ def DownloadPDF(qr_id):
 #region dados
 #region ler
 @app.route("/VeiculoModelo", methods=["GET"])
-@swag_from("docs/VeiculoModeloGet.yml")
-def listar_veiculo_modelo():
-    s = get_session()
+@swag_from("data/doc/swagger/VeiculoModeloGet.yml")
+def ListarVeiculoModelo():
+    s = GetSession()
     try:
         return jsonify([{
             "id": m.id,
@@ -154,9 +162,9 @@ def listar_veiculo_modelo():
         s.close()
 
 @app.route("/Veiculo", methods=["GET"])
-@swag_from("docs/VeiculoGet.yml")
-def listar_veiculos():
-    s = get_session()
+@swag_from("data/doc/swagger/VeiculoGet.yml")
+def ListarVeiculos():
+    s = GetSession()
     try:
         return jsonify([{
             "id": v.id,
@@ -177,9 +185,9 @@ def listar_veiculos():
         s.close()
 
 @app.route("/Materiais", methods=["GET"])
-@swag_from("docs/MateriaisGet.yml")
-def listar_materiais():
-    s = get_session()
+@swag_from("data/doc/swagger/MateriaisGet.yml")
+def ListarMateriais():
+    s = GetSession()
     try:
         return jsonify([{
             "id": m.id,
@@ -191,9 +199,9 @@ def listar_materiais():
         s.close()
 
 @app.route("/Componentes", methods=["GET"])
-@swag_from("docs/ComponentesGet.yml")
-def listar_componentes():
-    s = get_session()
+@swag_from("data/doc/swagger/ComponentesGet.yml")
+def ListarComponentes():
+    s = GetSession()
     try:   
         tipos = (s.query(Pecas, Veiculo)
                 .join(Veiculo, Pecas.veiculo_id == Veiculo.id)
@@ -214,8 +222,8 @@ def listar_componentes():
 #region post
 @app.route("/VeiculoModelo", methods=["POST"])
 @swag_from("data/doc/swagger/VeiculoModeloPost.yml")
-def criar_veiculo_modelo():
-    s = get_session()
+def CriarVeiculoModelo():
+    s = GetSession()
     dados = request.get_json(silent=True) or {}
     try:
         modelo = ModeloVeiculo(
@@ -239,9 +247,9 @@ def criar_veiculo_modelo():
         s.close()
 
 @app.route("/Veiculo", methods=["POST"])
-@swag_from("docs/veiculoCriar.yml")
-def criar_veiculo():
-    s = get_session()
+@swag_from("data/doc/swagger/veiculoCriar.yml")
+def CriarVeiculo():
+    s = GetSession()
     dados = request.get_json(silent=True) or {}
     try:
         chassi = (dados.get("chassi") or "").strip()
@@ -276,9 +284,9 @@ def criar_veiculo():
         s.close()
 
 @app.route("/Componentes", methods=["POST"])
-@swag_from("docs/ComponentesPost.yml")
-def criar_componente():
-    s = get_session()
+@swag_from("data/doc/swagger/ComponentesPost.yml")
+def CriarComponente():
+    s = GetSession()
     dados = request.get_json(silent=True) or {}
     try:
         if not dados.get("veiculo_id") or s.get(Veiculo, dados["veiculo_id"]) is None:
@@ -298,9 +306,9 @@ def criar_componente():
         s.close()
 
 @app.route("/Materiais", methods=["POST"])
-@swag_from("docs/MateriaisPost.yml")
-def criar_material():
-    s = get_session()
+@swag_from("data/doc/swagger/MateriaisPost.yml")
+def CriarMaterial():
+    s = GetSession()
     dados = request.get_json(silent=True) or {}
     try:
         if not dados.get("peca_id") or s.get(Pecas, dados["peca_id"]) is None:
@@ -322,8 +330,9 @@ def criar_material():
 
 #region put
 @app.route("/VeiculoModelo/<int:modelo_id>", methods=["PUT"])
-def editar_veiculo_modelo(modelo_id):
-    s = get_session()
+@swag_from("data/doc/swagger/VeiculoModeloPut.yml") 
+def EditarVeiculoModelo(modelo_id):
+    s = GetSession()
     dados = request.get_json(silent=True) or {}
     try:
         m = s.get(ModeloVeiculo, modelo_id)
@@ -347,8 +356,9 @@ def editar_veiculo_modelo(modelo_id):
         s.close()
 
 @app.route("/Veiculo/<int:veiculo_id>", methods=["PUT"])
-def editar_veiculo(veiculo_id):
-    s = get_session()
+@swag_from("data/doc/swagger/VeiculoModeloPut.yml") 
+def EditarVeiculo(veiculo_id):
+    s = GetSession()
     dados = request.get_json(silent=True) or {}
     try:
         v = s.get(Veiculo, veiculo_id)
@@ -374,8 +384,9 @@ def editar_veiculo(veiculo_id):
         s.close()
 
 @app.route("/Componentes/<int:peca_id>", methods=["PUT"])
-def editar_componente(peca_id):
-    s = get_session()
+@swag_from("data/doc/swagger/ComponentesPut.yml")
+def EditarComponente(peca_id):
+    s = GetSession()
     dados = request.get_json(silent=True) or {}
     try:
         p = s.get(Pecas, peca_id)
@@ -393,8 +404,9 @@ def editar_componente(peca_id):
         s.close()
 
 @app.route("/Materiais/<int:material_id>", methods=["PUT"])
-def editar_material(material_id):
-    s = get_session()
+@swag_from("data/doc/swagger/MateriaisPut.yml")
+def EditarMaterial(material_id):
+    s = GetSession()
     dados = request.get_json(silent=True) or {}
     try:
         m = s.get(Materiais, material_id)
@@ -414,8 +426,9 @@ def editar_material(material_id):
 
 #region delete
 @app.route("/VeiculoModelo/<int:modelo_id>", methods=["DELETE"])
-def remover_veiculo_modelo(modelo_id):
-    s = get_session()
+@swag_from("data/doc/swagger/VeiculoModeloDelete.yml")
+def RemoverVeiculoModelo(modelo_id):
+    s = GetSession()
     try:
         m = s.get(ModeloVeiculo, modelo_id)
         if m is None:
@@ -430,8 +443,9 @@ def remover_veiculo_modelo(modelo_id):
         s.close()
 
 @app.route("/Veiculo/<int:veiculo_id>", methods=["DELETE"])
-def remover_veiculo(veiculo_id):
-    s = get_session()
+@swag_from("data/doc/swagger/VeiculoDelete.yml")
+def RemoverVeiculo(veiculo_id):
+    s = GetSession()
     try:
         v = s.get(Veiculo, veiculo_id)
         if v is None:
@@ -446,8 +460,9 @@ def remover_veiculo(veiculo_id):
         s.close()
 
 @app.route("/Materiais/<int:material_id>", methods=["DELETE"])
-def remover_material(material_id):
-    s = get_session()
+@swag_from("data/doc/swagger/MateriaisDelete.yml")
+def RemoverMeterial(material_id):
+    s = GetSession()
     try:
         m = s.get(Materiais, material_id)
         if m is None:
@@ -462,8 +477,9 @@ def remover_material(material_id):
         s.close()
 
 @app.route("/Componentes/<int:peca_id>", methods=["DELETE"])
-def remover_componente(peca_id):
-    s = get_session()
+@swag_from("data/doc/swagger/ComponentesDelete.yml")
+def RemoverComponente(peca_id):
+    s = GetSession()
     try:
         p = s.get(Pecas, peca_id)
         if p is None:
@@ -478,8 +494,8 @@ def remover_componente(peca_id):
         s.close()
 #endregion delete
 #region calculos
-def _calc(veiculo_id, parte="resumo"):
-    s = get_session()
+def Calc(veiculo_id, parte="resumo"):
+    s = GetSession()
     try:
         r = Calculo.Veiculo(s, veiculo_id, parte)
         if r is None:
@@ -491,21 +507,25 @@ def _calc(veiculo_id, parte="resumo"):
         s.close()
  
 @app.route("/Calculos/<int:veiculo_id>", methods=["GET"])
+@swag_from("data/doc/swagger/CalculoResumo.yml")
 def calculo_resumo(veiculo_id):
-    return _calc(veiculo_id)
+    return Calc(veiculo_id)
  
 @app.route("/Calculos/<int:veiculo_id>/cenarios", methods=["GET"])
+@swag_from("data/doc/swagger/CalculoCenarios.yml")       
 def calculo_cenarios(veiculo_id):
-    return _calc(veiculo_id, "cenarios")
+    return Calc(veiculo_id, "cenarios")
  
 @app.route("/Calculos/<int:veiculo_id>/sensibilidade", methods=["GET"])
+@swag_from("data/doc/swagger/CalculoSensibilidade.yml")
 def calculo_sensibilidade(veiculo_id):
-    return _calc(veiculo_id, "sensibilidade")
+    return Calc(veiculo_id, "sensibilidade")
  
-# ---- atividade do veículo
+
 @app.route("/Atividade/<int:veiculo_id>", methods=["GET"])
-def ler_atividade(veiculo_id):
-    s = get_session()
+@swag_from("data/doc/swagger/AtividadeGet.yml")
+def LerAtividade(veiculo_id):
+    s = GetSession()
     try:
         atividade, _ = Calculo.Atividade(s, veiculo_id)
         return jsonify(atividade)
@@ -513,8 +533,9 @@ def ler_atividade(veiculo_id):
         s.close()
  
 @app.route("/Atividade/<int:veiculo_id>", methods=["PUT"])
-def salvar_atividade(veiculo_id):
-    s = get_session()
+@swag_from("data/doc/swagger/AtividadePut.yml")
+def SalvarAtividade(veiculo_id):
+    s = GetSession()
     try:
         if s.get(Veiculo, veiculo_id) is None:
             return jsonify({"erro": "Veículo não encontrado"}), 404
@@ -537,10 +558,11 @@ def salvar_atividade(veiculo_id):
     finally:
         s.close()
  
-# ---- destinos dos materiais (banco + padrão do PDF para o que faltar)
+#destinos dos materiais (banco + padrão do PDF para o que faltar)
 @app.route("/Destinos", methods=["GET"])
-def listar_destinos():
-    s = get_session()
+@swag_from("data/doc/swagger/DestinosGet.yml") 
+def ListarDestinos():
+    s = GetSession()
     try:
         _, destinos = Calculo.Parametros(s)
         return jsonify([{"material": g, "reciclagem": destinos[g][0], "reuso": destinos[g][1],
@@ -550,10 +572,11 @@ def listar_destinos():
         s.close()
  
 @app.route("/Destinos/<material>", methods=["PUT"])
-def salvar_destino(material):
+@swag_from("data/doc/swagger/DestinoPut.yml")
+def SalvarDestino(material):
     if material not in GRUPOS:
         return jsonify({"erro": "Material desconhecido"}), 404
-    s = get_session()
+    s = GetSession()
     try:
         d = request.get_json(silent=True) or {}
         cols = ("reciclagem", "reuso", "valorizacao", "disposicao")
@@ -574,8 +597,9 @@ def salvar_destino(material):
  
 
 @app.route("/Fatores", methods=["GET"])
-def listar_fatores():
-    s = get_session()
+@swag_from("data/doc/swagger/FatoresGet.yml")
+def ListarFatores():
+    s = GetSession()
     try:
         banco = {f.chave: f for f in s.query(FatorEmissao).all()}
         saida = []
@@ -588,11 +612,12 @@ def listar_fatores():
         s.close()
  
 @app.route("/Fatores/<path:chave>", methods=["PUT"])
-def salvar_fator(chave):
+@swag_from("data/doc/swagger/FatorPut.yml")
+def SalvarFator(chave):
     padrao = {c: (v, u, o) for c, v, u, o in FATORES_PADRAO}
     if chave not in padrao:
         return jsonify({"erro": "Fator desconhecido"}), 404
-    s = get_session()
+    s = GetSession()
     try:
         d = request.get_json(silent=True) or {}
         valor = float(d.get("valor"))
@@ -613,6 +638,7 @@ def salvar_fator(chave):
 #endregion dados
 #region rodar
 if __name__ == "__main__":
+    GarantirQRs()#para testes/ter alguns so para ver independente de estar experido ou não
     # com debug, o reloader executa este bloco 2x; só o processo filho (WERKZEUG_RUN_MAIN) regera
     if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         QR.RegerarTodos()

@@ -1,0 +1,55 @@
+tags:
+- Destinos dos materiais
+summary: Salva os destinos (%) de um material
+consumes: &id001
+- application/json
+produces: *id001
+parameters:
+- name: material
+  in: path
+  required: true
+  type: string
+  description: Grupo do material (um dos valores de GRUPOS)
+- name: body
+  in: body
+  required: true
+  description: Os quatro valores devem somar 100
+  schema:
+    type: object
+    properties:
+      reciclagem:
+        type: number
+        example: 60
+      reuso:
+        type: number
+        example: 10
+      valorizacao:
+        type: number
+        example: 20
+      disposicao:
+        type: number
+        example: 10
+    required:
+    - reciclagem
+    - reuso
+    - valorizacao
+    - disposicao
+responses:
+  200:
+    description: Salvo
+    schema:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+  400:
+    description: Valores negativos ou soma diferente de 100%
+    schema: &id002
+      type: object
+      properties:
+        erro:
+          type: string
+  404:
+    description: Material desconhecido
+    schema: *id002
