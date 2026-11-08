@@ -64,6 +64,7 @@ async function carregarInventario() {
                 formatar(p.massa_nao_identificada_kg), (p.alertas || []).join("; "),
                 botao("Editar", () => abrirPeca(p.peca_id)))));
         $("linkCalculo").href = `/Calculos?veiculo=${veiculoId}`;
+        await Promise.all([carregarAgregada(), carregarEspeciais()]);
     } catch (e) {
         $("invConteudo").hidden = true;
         $("invErro").textContent = `Não foi possível carregar o inventário: ${e.message}`;
@@ -83,6 +84,72 @@ $("invFonte").addEventListener("change", async () => {
     await carregarInventario();
 });
 //#endregion veiculo
+
+//#region agregada
+// Composição GLOBAL do veículo (PDF, seção 3). A API valida e soma; aqui só edita e envia.
+const editorAgg = EditorComposicao($("aggComposicao"));
+
+async function carregarAgregada() {
+    mostrar("aggMensagem", "");
+    preencherLista($("aggAlertas"), []);
+    try {
+        const g = await api(`/Veiculo/${veiculoId}/composicao`);
+        editorAgg.definir(g.itens.length ? g.itens : null);
+        carregarCatalogo().catch(() => {});
+    } catch (e) { mostrar("aggMensagem", e.message, "erro"); }
+}
+
+$("btnSalvarAgg").addEventListener("click", async () => {
+    try {
+        const r = await api(`/Veiculo/${veiculoId}/composicao`,
+            { method: "PUT", body: JSON.stringify({ itens: editorAgg.ler() ?? [] }) });
+        await carregarInventario();               // recarrega tudo (e limpa as mensagens)
+        mostrar("aggMensagem", "Composição global salva.", "ok");
+        preencherLista($("aggAlertas"), r.alertas || []);
+    } catch (erro) { mostrar("aggMensagem", erroDe(erro), "erro"); }
+});
+//#endregion agregada
+
+//#region especiais
+// Componentes e resíduos especiais (PDF, seção 5): informação de rota/tratamento, não entra nas emissões.
+const ORIGENS_ESPECIAL = ["nao_informado", "referencia", "medido", "estimado", "fornecedor"];
+
+function linhaEspecial(i = {}) {
+    const item = el("input", { type: "text", value: i.item ?? "", placeholder: "Óleo lubrificante" });
+    const qtd = el("input", { type: "number", min: "0", step: "any", value: i.quantidade ?? "" });
+    const un = el("select", {}, ...[["", "—"], ["L", "L"], ["kg", "kg"]].map(([v, t]) => el("option", { value: v, textContent: t })));
+    un.value = i.unidade ?? "";
+    const destino = el("input", { type: "text", value: i.destino ?? "", placeholder: "Coleta e tratamento" });
+    const origem = el("select", {}, ...ORIGENS_ESPECIAL.map(o => el("option", { value: o, textContent: o })));
+    origem.value = i.origem ?? "nao_informado";
+    const tr = linha(item, qtd, un, destino, origem, botao("Remover", () => tr.remove()));
+    return tr;
+}
+
+async function carregarEspeciais() {
+    mostrar("espMensagem", "");
+    try {
+        const r = await api(`/Veiculo/${veiculoId}/especiais`);
+        $("tabEspeciais").replaceChildren(cabecalho(["Item", "Quantidade", "Unidade", "Destino", "Origem", ""]),
+            ...r.itens.map(linhaEspecial));
+    } catch (e) { mostrar("espMensagem", e.message, "erro"); }
+}
+
+$("btnNovoEspecial").addEventListener("click", () => $("tabEspeciais").append(linhaEspecial()));
+
+$("btnSalvarEspeciais").addEventListener("click", async () => {
+    const itens = [...$("tabEspeciais").querySelectorAll("tr")].slice(1).map(tr => {
+        const [item, qtd, un, destino, origem] = tr.querySelectorAll("input, select");
+        return { item: item.value.trim(), quantidade: qtd.value === "" ? null : Number(qtd.value),
+                 unidade: un.value || null, destino: destino.value.trim() || null, origem: origem.value };
+    }).filter(i => i.item || i.quantidade != null || i.destino);       // ignora linhas totalmente vazias
+    try {
+        await api(`/Veiculo/${veiculoId}/especiais`, { method: "PUT", body: JSON.stringify({ itens }) });
+        await carregarEspeciais();
+        mostrar("espMensagem", "Itens especiais salvos.", "ok");
+    } catch (erro) { mostrar("espMensagem", erroDe(erro), "erro"); }
+});
+//#endregion especiais
 
 //#region peca
 function fecharPeca() { $("peca").hidden = true; pecaId = null; }

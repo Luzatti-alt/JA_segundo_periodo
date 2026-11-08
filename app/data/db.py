@@ -77,6 +77,8 @@ class Veiculo(Base):
     qrs = relationship('QRFiles', back_populates='veiculo', cascade='all, delete-orphan')
     atividade = relationship('AtividadeVeiculo', back_populates='veiculo', uselist=False,
                              cascade='all, delete-orphan')
+    itens_especiais = relationship('ItemEspecial', back_populates='veiculo', cascade='all, delete-orphan',
+                                   order_by='ItemEspecial.id')
 
 
 class Pecas(Base):
@@ -257,6 +259,22 @@ class AtividadeVeiculo(Base):
 #endregion calculo
 
 #region migracao
+class ItemEspecial(Base):
+    #Componente/resíduo que não é sucata convencional (PDF, seção 5): quantidade, unidade e destino.
+    #Quando o veículo tem itens aqui, a "lista de atenção" do cálculo usa ESTES (e não o palpite pelo nome da peça).
+    #Não entra no cálculo de emissões: é informação de rota/tratamento. O sistema não converte L em kg.#
+    __tablename__ = 'ItensEspeciais'
+    id = Column(Integer, primary_key=True)
+    veiculo_id = Column(Integer, ForeignKey('Veiculo.id'), nullable=False)
+    item = Column(String(80), nullable=False)
+    quantidade = Column(Float)
+    unidade = Column(String(10))                 # "L" | "kg"
+    destino = Column(String(100))
+    origem = Column(String(20), default="nao_informado")   # referencia|medido|estimado|fornecedor|nao_informado
+
+    veiculo = relationship('Veiculo', back_populates='itens_especiais')
+
+
 class SchemaVersao(Base):
     __tablename__ = 'SchemaVersao'
     versao = Column(Integer, primary_key=True)

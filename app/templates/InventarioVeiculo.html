@@ -39,6 +39,25 @@
                 <div class="Tabela"><table id="tabInvPecas"></table></div>
                 <button type="button" id="btnNovaPeca">Novo componente</button>
                 <a id="linkCalculo" class="BotaoLink" href="#">Calcular este veículo</a>
+
+                <h2>Composição global do veículo</h2>
+                <p class="Nota">Massa por material do veículo inteiro, como no PDF de referência. Só vale no inventário e no
+                    cálculo quando a fonte da composição, acima, é "agregada".</p>
+                <div id="aggComposicao"></div>
+                <div class="ModalAcoes"><button type="button" class="BtnConfirmar" id="btnSalvarAgg">Salvar composição global</button></div>
+                <p class="ModalMensagem" id="aggMensagem" role="status"></p>
+                <ul id="aggAlertas"></ul>
+
+                <h2>Componentes e resíduos especiais</h2>
+                <p class="Nota">Itens que não são sucata convencional e exigem rota própria (óleo, fluidos, bateria, pneus...).
+                    É informação de rota e tratamento: não altera as emissões, e litros não são convertidos em kg.
+                    Sem itens registrados, a lista de atenção do cálculo é montada pelo nome dos componentes.</p>
+                <div class="Tabela"><table id="tabEspeciais"></table></div>
+                <div class="ModalAcoes">
+                    <button type="button" id="btnNovoEspecial">Adicionar item</button>
+                    <button type="button" class="BtnConfirmar" id="btnSalvarEspeciais">Salvar itens especiais</button>
+                </div>
+                <p class="ModalMensagem" id="espMensagem" role="status"></p>
             </div>
         </section>
 

@@ -38,6 +38,7 @@ body {
     font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
     line-height: 1.5;
 }
+
 .CabecalhoSite {
     position: sticky;
     top: 0;
@@ -105,8 +106,7 @@ h3 {
 p {
     margin: 0 0 .75rem;
 }
-a {
-    color: var(--acento);
+a { color: var(--acento);
 }
 a:hover {
     text-decoration: none;
@@ -149,7 +149,7 @@ a:hover {
 .ModalMensagem.erro {
     color: var(--perigo);
 }
-ul {
+ul, ol {
     margin: 0 0 .75rem;
     padding-left: 1.25rem;
 }
@@ -196,10 +196,7 @@ button:disabled { opacity: .55; cursor: not-allowed; }
     background: var(--perigo-fundo-hover);
     border-color: var(--perigo-fundo-hover);
 }
-:focus-visible {
-    outline: 2px solid var(--acento);
-    outline-offset: 2px;
-}
+:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
 
 label {
     display: flex;
@@ -233,9 +230,7 @@ input:disabled, select:disabled {
     opacity: .6;
     cursor: not-allowed;
 }
-textarea {
-    resize: vertical;
-}
+textarea { resize: vertical; }
 
 .Formulario {
     display: grid;
@@ -249,7 +244,8 @@ textarea {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
     gap: .9rem 1rem;
-    margin-bottom: .75rem; }
+    margin-bottom: .75rem;
+}
 .Filtros {
     display: flex;
     flex-wrap: wrap;

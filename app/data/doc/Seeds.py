@@ -1,14 +1,15 @@
 from sqlalchemy.exc import IntegrityError
 
 from app.data.db import (Session, ModeloVeiculo, Veiculo, Pecas, ComposicaoVeiculo,
-                         AtividadeVeiculo, ResolverMaterial)
+                         AtividadeVeiculo, ItemEspecial, ResolverMaterial)
 from app.data.doc.Calculos import ATIVIDADE_PADRAO
 
 CHASSI_REF = "REF-PDF-0001"
-FONTE_PDF = 'PDF "Parte 1 - Modelo hipotético de cálculo da pegada de carbono"'
+FONTE_PDF = "PDF de referência (hipotético)"          # texto curto: aparece em tabelas e no PDF do QR
+FONTES_ANTIGAS = ('PDF "Parte 1 - Modelo hipotético de cálculo da pegada de carbono"',)
 
 MASSA_TOTAL_KG = 1200.0
-# Dados hipotéticos do PDF "Parte 1" (seção 3 = componentes, seção 4 = composição global).
+# Dados hipotéticos do PDF de referência atual (seção 2 = componentes, 3 = composição global, 5 = especiais).
 # O PDF NÃO informa a composição de cada componente: só a massa dele e a composição global do veículo.
 COMPONENTES_PDF = [          # [("Componente", massa_kg), ...]  -> 24 itens, somam 1.200 kg
     ("Carroceria e painéis estruturais", 390), ("Chassi e subestruturas", 110), ("Motor", 130),
@@ -23,6 +24,16 @@ COMPONENTES_PDF = [          # [("Componente", massa_kg), ...]  -> 24 itens, som
 COMPOSICAO_GLOBAL_PDF = [    # [("Material", massa_kg), ...]  -> 1.189 kg sólidos + 11 kg fluidos = 1.200 kg
     ("Aço", 585), ("Ferro fundido", 128), ("Alumínio", 101), ("Cobre", 28), ("Plásticos", 193),
     ("Vidro", 33), ("Borracha", 50), ("Chumbo", 13), ("Outros", 58), ("Fluidos", 11),
+]
+ITENS_ESPECIAIS_PDF = [      # seção 5: ("Item", quantidade, "unidade", "destino")
+    ("Óleo lubrificante", 4.5, "L", "Coleta e tratamento"),
+    ("Fluido de arrefecimento", 5.0, "L", "Tratamento"),
+    ("Fluido de freio", 1.0, "L", "Tratamento especializado"),
+    ("Combustível residual", 0.5, "L", "Recuperação/tratamento"),
+    ("Bateria 12 V", 15, "kg", "Reciclagem específica"),
+    ("Pneus", 40, "kg", "Rotas específicas"),
+    ("Catalisador", 4, "kg", "Recuperação de materiais"),
+    ("Componentes eletrônicos", 15, "kg", "Reciclagem especializada"),
 ]
 
 
@@ -43,11 +54,29 @@ def _validar(componentes, composicao):
     return erros, avisos
 
 
+def _completar_existente(s, v):
+    #Bancos criados antes desta versão: acrescenta os itens especiais e encurta o texto da fonte. Idempotente.#
+    mudou = False
+    if not v.itens_especiais:
+        for item, qtd, un, destino in ITENS_ESPECIAIS_PDF:
+            s.add(ItemEspecial(veiculo=v, item=item, quantidade=qtd, unidade=un, destino=destino, origem="referencia"))
+        mudou = True
+    for c in v.composicao_agregada:
+        if c.fonte in FONTES_ANTIGAS:
+            c.fonte = FONTE_PDF
+            mudou = True
+    if mudou:
+        s.commit()
+        print("SeedReferenciaPDF: cenário de referência atualizado (itens especiais / texto da fonte).")
+
+
 def SeedReferenciaPDF(componentes=None, composicao=None):
     componentes = COMPONENTES_PDF if componentes is None else componentes
     composicao = COMPOSICAO_GLOBAL_PDF if composicao is None else composicao
     with Session() as s:
-        if s.query(Veiculo).filter_by(Chassi=CHASSI_REF).first():
+        existente = s.query(Veiculo).filter_by(Chassi=CHASSI_REF).first()
+        if existente:
+            _completar_existente(s, existente)
             print("SeedReferenciaPDF: cenário de referência já cadastrado.")
             return None
         if not componentes or not composicao:
@@ -79,11 +108,14 @@ def SeedReferenciaPDF(componentes=None, composicao=None):
                                         origem="referencia", fonte=FONTE_PDF))
             # atividade gravada explicitamente (valores hipotéticos do PDF), para o cálculo não cair no padrão em silêncio
             s.add(AtividadeVeiculo(veiculo=v, **ATIVIDADE_PADRAO))
+            for item, qtd, un, destino in ITENS_ESPECIAIS_PDF:
+                s.add(ItemEspecial(veiculo=v, item=item, quantidade=qtd, unidade=un, destino=destino,
+                                   origem="referencia"))
             s.commit()
             for a in avisos:
                 print(f"SeedReferenciaPDF aviso: {a}")
             print(f"SeedReferenciaPDF: veículo #{v.id} criado ({len(componentes)} componentes, "
-                  f"{len(composicao)} materiais).")
+                  f"{len(composicao)} materiais, {len(ITENS_ESPECIAIS_PDF)} itens especiais).")
             return v.id
         except IntegrityError:          # dois processos do reloader podem semear ao mesmo tempo
             s.rollback()

@@ -80,7 +80,8 @@ CENARIOS = {
     "alta":  {"nome": "Alta recuperação", "disposicao_para_reciclagem_pct": 96.13},
 }
 
-# seção 6: itens que não são sucata convencional ("lista de atenção")
+# seção 5: itens que não são sucata convencional ("lista de atenção"). Se o veículo tem ItemEspecial
+# cadastrado, a lista vem DELES; esta heurística (por nome do componente) só vale como plano B.
 ITENS_ATENCAO = [
     (("bateria",), "Reciclagem específica"),
     (("pneu",), "Rotas específicas"),
@@ -90,8 +91,8 @@ ITENS_ATENCAO = [
     # "Arrefecimento/climatização" são hardware: o fluido deles está no componente "Fluidos/resíduos".
     (("oleo", "fluido", "liquido", "residuo"), "Coleta e tratamento"),
 ]
-# Limitação: o PDF (seção 6) dá quantidades em litros (óleo 4,5 L, arrefecimento 5,0 L, freio 1,0 L,
-# combustível residual 0,5 L). O sistema só guarda os 11 kg agregados; a lista é detectada pelo nome do componente.
+# Limitação: o PDF lista 11 L de fluidos (4,5 + 5,0 + 1,0 + 0,5) e 11 kg de fluidos na composição, mas não dá a
+# densidade. O sistema NÃO converte L em kg: o cálculo usa os kg da composição; os litros ficam só na lista.
 #endregion constantes
 
 
@@ -314,11 +315,16 @@ class Calculo:
         materiais, fluidos, avisos, atencao = {}, 0.0, [], []
         fora = {"sem_grupo": {}, "nao_identificada_kg": 0.0, "sem_composicao_kg": 0.0}
 
-        for p in pecas:
-            destino = ItemAtencao(p.Categoria)
-            if destino:
-                atencao.append({"peca_id": p.id, "categoria": p.Categoria,
-                                "peso_kg": p.Peso, "destino": destino})
+        if v.itens_especiais:                                   # registrados (PDF, seção 5)
+            for e in v.itens_especiais:
+                atencao.append({"categoria": e.item, "quantidade": e.quantidade, "unidade": e.unidade,
+                                "destino": e.destino, "fonte": "registrado"})
+        else:                                                   # plano B: palpite pelo nome do componente
+            for p in pecas:
+                destino = ItemAtencao(p.Categoria)
+                if destino:
+                    atencao.append({"categoria": p.Categoria, "quantidade": p.Peso, "unidade": "kg",
+                                    "destino": destino, "fonte": "detectado pelo nome do componente"})
 
         itens = []          # (material_id, nome_texto, massa_kg)
         if fonte == "por_peca":
@@ -339,6 +345,9 @@ class Calculo:
                 avisos.append("Composição por peça ignorada: a fonte do veículo é 'agregada' "
                               "(evita contar a mesma massa duas vezes)")
             for c in s.query(ComposicaoVeiculo).filter(ComposicaoVeiculo.veiculo_id == v.id):
+                if c.material_id is None and not c.categoria_texto:      # massa declarada como não identificada
+                    fora["nao_identificada_kg"] += c.massa_kg or 0.0
+                    continue
                 mid = c.material_id
                 if mid is None and c.categoria_texto:
                     m = ResolverMaterial(s, c.categoria_texto, criar=False)

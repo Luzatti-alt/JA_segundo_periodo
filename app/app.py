@@ -19,7 +19,7 @@ import qrcode
 
 from app.data.db import session, Session, ModeloVeiculo, Veiculo, Pecas, Materiais, QRFiles, AtividadeVeiculo, DestinoMaterial, FatorEmissao 
 from app.data.db import (CatalogoMaterial, CatalogoAlias, MaterialGrupo, ModeloComponente,
-                         ComposicaoVeiculo, ResolverMaterial)
+                         ComposicaoVeiculo, ItemEspecial, ResolverMaterial)
 from datetime import datetime
 from app.services import Inventario
 from app.data.doc.Calculos import *
@@ -693,6 +693,132 @@ def InventarioVeiculo(veiculo_id):
         return jsonify(Inventario.IndicadoresVeiculo(s, v))
     finally:
         s.close()
+
+#region composicao agregada e itens especiais
+def ItemComposicaoJSON(c, catalogo):
+    identificado = bool(c.material_id or c.categoria_texto)
+    return {"id": c.id, "material_id": c.material_id,
+            "categoria": catalogo[c.material_id][0] if c.material_id in catalogo else c.categoria_texto,
+            "massa_kg": c.massa_kg, "status": "identificado" if identificado else "nao_identificado",
+            "origem": c.origem, "fonte": c.fonte}
+
+@app.route("/Veiculo/<int:veiculo_id>/composicao", methods=["GET"])
+def LerComposicaoVeiculo(veiculo_id):
+    #Composição GLOBAL do veículo (PDF, seção 3). Só vale no cálculo com fonte_composicao='agregada'.
+    s = GetSession()
+    try:
+        v = s.get(Veiculo, veiculo_id)
+        if v is None or v.removido_em is not None:
+            return jsonify({"erro": "Veículo não encontrado"}), 404
+        catalogo = Inventario.StatusCatalogo(s)
+        itens = [ItemComposicaoJSON(c, catalogo) for c in sorted(v.composicao_agregada, key=lambda c: c.id)]
+        return jsonify({"veiculo_id": v.id, "fonte_composicao": v.fonte_composicao,
+                        "massa_total_kg": v.MassaTotal, "itens": itens})
+    finally:
+        s.close()
+
+@app.route("/Veiculo/<int:veiculo_id>/composicao", methods=["PUT"])
+def SalvarComposicaoVeiculo(veiculo_id):
+    #Substitui a composição global inteira. Mesmas validações da composição por peça (catálogo, massas, soma).
+    s = GetSession()
+    dados = request.get_json(silent=True) or {}
+    try:
+        v = s.get(Veiculo, veiculo_id)
+        if v is None or v.removido_em is not None:
+            return jsonify({"erro": "Veículo não encontrado"}), 404
+        bruta = dados.get("itens")
+        if not isinstance(bruta, list):
+            return jsonify({"erro": "itens deve ser uma lista (use [] para esvaziar)"}), 400
+        itens, erros, alertas = Inventario.NormalizarComposicao(s, bruta, v.MassaTotal)
+        for n, i in enumerate(itens or [], 1):
+            if i["origem"] not in Inventario.ORIGENS_MASSA:
+                erros.append(f"Item {n}: origem deve ser um de {', '.join(Inventario.ORIGENS_MASSA)}")
+            if len(str(i.get("fonte") or "")) > 100:
+                erros.append(f"Item {n}: fonte com mais de 100 caracteres")
+        if erros:
+            s.rollback()                       # desfaz materiais criados no catálogo durante a validação
+            return ErroComposicao(erros)
+        v.composicao_agregada = [ComposicaoVeiculo(material_id=i["material_id"], categoria_texto=i["categoria"],
+                                                   massa_kg=i["massa_kg"], origem=i["origem"], fonte=i.get("fonte"))
+                                 for i in itens]
+        s.commit()
+        if v.fonte_composicao != "agregada":
+            alertas.append("A fonte de composição deste veículo é 'por_peca': esta composição global só vale "
+                           "no inventário e no cálculo quando a fonte for 'agregada'")
+        return jsonify({"ok": True, "alertas": alertas, "indicadores": Inventario.IndicadoresVeiculo(s, v)}), 200
+    except Exception as e:
+        s.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        s.close()
+
+UNIDADES_ESPECIAIS = ("L", "kg")
+
+def ItemEspecialJSON(e):
+    return {"id": e.id, "item": e.item, "quantidade": e.quantidade, "unidade": e.unidade,
+            "destino": e.destino, "origem": e.origem}
+
+@app.route("/Veiculo/<int:veiculo_id>/especiais", methods=["GET"])
+def LerItensEspeciais(veiculo_id):
+    #Componentes e resíduos especiais (PDF, seção 5). É informação de rota/tratamento: não entra nas emissões.
+    s = GetSession()
+    try:
+        v = s.get(Veiculo, veiculo_id)
+        if v is None or v.removido_em is not None:
+            return jsonify({"erro": "Veículo não encontrado"}), 404
+        return jsonify({"veiculo_id": v.id, "itens": [ItemEspecialJSON(e) for e in v.itens_especiais]})
+    finally:
+        s.close()
+
+@app.route("/Veiculo/<int:veiculo_id>/especiais", methods=["PUT"])
+def SalvarItensEspeciais(veiculo_id):
+    s = GetSession()
+    dados = request.get_json(silent=True) or {}
+    try:
+        v = s.get(Veiculo, veiculo_id)
+        if v is None or v.removido_em is not None:
+            return jsonify({"erro": "Veículo não encontrado"}), 404
+        bruta = dados.get("itens")
+        if not isinstance(bruta, list):
+            return jsonify({"erro": "itens deve ser uma lista (use [] para esvaziar)"}), 400
+        erros, novos = [], []
+        for n, b in enumerate(bruta, 1):
+            rot = f"Item {n}"
+            if not isinstance(b, dict):
+                erros.append(f"{rot}: deve ser um objeto")
+                continue
+            nome = (b.get("item") or "").strip()
+            if not nome or len(nome) > 80:
+                erros.append(f"{rot}: informe o item (até 80 caracteres)")
+                continue
+            qtd, erro = LerNumero(b.get("quantidade"), f"{rot}: quantidade")
+            if erro:
+                erros.append(erro)
+                continue
+            un = b.get("unidade") or None
+            if (qtd is not None or un is not None) and un not in UNIDADES_ESPECIAIS:
+                erros.append(f"{rot}: unidade deve ser uma de {', '.join(UNIDADES_ESPECIAIS)}")
+                continue
+            destino = (b.get("destino") or "").strip() or None
+            if destino and len(destino) > 100:
+                erros.append(f"{rot}: destino com mais de 100 caracteres")
+                continue
+            origem = b.get("origem") or "nao_informado"
+            if origem not in Inventario.ORIGENS_MASSA:
+                erros.append(f"{rot}: origem deve ser uma de {', '.join(Inventario.ORIGENS_MASSA)}")
+                continue
+            novos.append(ItemEspecial(item=nome, quantidade=qtd, unidade=un, destino=destino, origem=origem))
+        if erros:
+            return ErroComposicao(erros)
+        v.itens_especiais = novos
+        s.commit()
+        return jsonify({"ok": True, "itens": [ItemEspecialJSON(e) for e in v.itens_especiais]}), 200
+    except Exception as e:
+        s.rollback()
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        s.close()
+#endregion composicao agregada e itens especiais
 
 def ComponenteModeloJSON(c):
     return {"id": c.id, "modelo_id": c.modelo_id, "categoria": c.categoria, "massa_ref_kg": c.massa_ref_kg,

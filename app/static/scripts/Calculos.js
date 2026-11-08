@@ -93,8 +93,9 @@ function mostrarResultado(r) {
         Object.entries(r.destinos).map(([nome, d]) => linha([nome, num(d.massa_kg), num(d.participacao_pct)])));
     montar("tabBeneficio", ["Material", "Reciclada (kg)", "FE virgem", "Deslocamento", "kgCO2e evitados"],
         r.beneficio_por_material.map(m => linha([m.material, num(m.massa_reciclada_kg), num(m.fe_virgem), num(m.fd), num(m.kg_co2e)])));
-    montar("tabAtencao", ["Peça", "Peso (kg)", "Destino específico"],
-        r.lista_de_atencao.map(i => linha([i.categoria, num(i.peso_kg), i.destino])));
+    montar("tabAtencao", ["Item", "Quantidade", "Destino específico", "Fonte do dado"],
+        r.lista_de_atencao.map(i => linha([i.categoria, i.quantidade == null ? "—" : `${num(i.quantidade)} ${i.unidade ?? ""}`.trim(),
+            i.destino, i.fonte])));
     document.getElementById("listaAvisos").replaceChildren(
         ...(r.avisos.length ? r.avisos : ["Nenhum aviso."]).map(a => celula("li", a)));
     document.getElementById("calcResultado").hidden = false;

@@ -43,7 +43,20 @@ main > section {
     gap: .5rem;
 }
 
+/* tabela editável de itens especiais */
+#tabEspeciais td input, #tabEspeciais td select {
+    padding: .3rem .5rem;
+    min-width: 5rem;
+}
+#tabEspeciais td:first-child input {
+    min-width: 11rem;
+}
+
 @media (max-width: 600px) {
-    .ComposicaoItem { grid-template-columns: 1fr 1fr; }
-    .ComposicaoItem input[type="text"] { grid-column: 1 / -1; }
+    .ComposicaoItem {
+        grid-template-columns: 1fr 1fr;
+    }
+    .ComposicaoItem input[type="text"] {
+        grid-column: 1 / -1;
+    }
 }
