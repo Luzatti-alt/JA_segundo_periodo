@@ -1,0 +1,94 @@
+tags:
+  - Itens especiais
+summary: Substituir os itens especiais de um veículo
+description: Substitui a lista completa de itens especiais. Envie itens como lista vazia para remover todos os itens cadastrados.
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  - name: veiculo_id
+    in: path
+    type: integer
+    required: true
+    description: ID do veículo.
+  - name: body
+    in: body
+    required: true
+    description: Lista completa de itens especiais.
+    schema:
+      type: object
+      required:
+        - itens
+      properties:
+        itens:
+          type: array
+          items:
+            type: object
+            required:
+              - item
+            properties:
+              item:
+                type: string
+                maxLength: 80
+              quantidade:
+                type: number
+                minimum: 0
+                nullable: true
+              unidade:
+                type: string
+                enum: [L, kg]
+                nullable: true
+              destino:
+                type: string
+                maxLength: 100
+                nullable: true
+              origem:
+                type: string
+                description: Origem conforme Inventario.ORIGENS_MASSA; padrão nao informado.
+responses:
+  200:
+    description: Itens especiais salvos.
+    schema:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        itens:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              item:
+                type: string
+              quantidade:
+                type: number
+                nullable: true
+              unidade:
+                type: string
+                nullable: true
+              destino:
+                type: string
+                nullable: true
+              origem:
+                type: string
+  400:
+    description: Dados inválidos.
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+        erros:
+          type: array
+          items:
+            type: string
+  404:
+    description: Veículo não encontrado.
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string

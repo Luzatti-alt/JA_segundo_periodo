@@ -1,0 +1,54 @@
+tags:
+  - Composição do veículo
+summary: Consultar composição agregada de um veículo
+description: Retorna a composição global cadastrada para o veículo, incluindo a fonte de composição, massa total e itens.
+parameters:
+  - name: veiculo_id
+    in: path
+    type: integer
+    required: true
+    description: ID do veículo.
+responses:
+  200:
+    description: Composição do veículo.
+    schema:
+      type: object
+      properties:
+        veiculo_id:
+          type: integer
+        fonte_composicao:
+          type: string
+          enum: [por_peca, agregada]
+        massa_total_kg:
+          type: number
+          nullable: true
+        itens:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              material_id:
+                type: integer
+                nullable: true
+              categoria:
+                type: string
+                nullable: true
+              massa_kg:
+                type: number
+              status:
+                type: string
+                enum: [identificado, nao_identificado]
+              origem:
+                type: string
+              fonte:
+                type: string
+                nullable: true
+  404:
+    description: Veículo não encontrado.
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string

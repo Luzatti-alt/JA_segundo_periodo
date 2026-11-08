@@ -1,7 +1,4 @@
 #region constantes
-# Fonte: "Parte 1 - Modelo hipotético de cálculo da pegada de carbono".
-# TODOS os valores abaixo são HIPOTÉTICOS (exceto eletricidade e diesel, que o PDF
-# cita como referência pública). Servem para demonstrar e testar o modelo.
 import unicodedata
 
 GRUPOS = ["Aço", "Ferro fundido", "Alumínio", "Cobre", "Plásticos",
@@ -22,8 +19,6 @@ DESTINOS_PADRAO = {
     "Outros":        (30, 5, 25, 40),
 }
 
-# seção 8: dados de atividade (por veículo). A massa transportada inicialmente
-# é a massa total do veículo.
 ATIVIDADE_PADRAO = {
     "transporte_inicial_km": 100.0,
     "energia_kwh": 35.0,
@@ -62,18 +57,6 @@ FATORES_PADRAO = (
 RESULTADO_PDF = {"total": 723.69, "reciclagem": 666.41, "diesel": 21.36, "transporte": 17.86,
                  "disposicao": 13.16, "tratamento_fluidos": 3.30, "eletricidade": 1.60,
                  "beneficio": 2418.01}
-
-# CONFERÊNCIA COM O PDF (cenário-base, veículo de referência completo):
-#   total, reciclagem, diesel, transporte, disposição, fluidos, eletricidade, benefício e saldo: IGUAIS ao PDF.
-#   Cenários: massa reciclada/taxa/massa disposta batem (≤ 0,01 kg), mas a emissão bruta DIVERGE:
-#     baixa 645,27 (PDF 641,74) e alta 766,21 (PDF 769,93). Causa provável: o PDF não informa as taxas por
-#     material; aqui a variação é uniforme em todos os materiais. Não há como fechar sem esses dados.
-#   Sensibilidade: FE do aço, FE do alumínio, distâncias e eletricidade batem exatamente; "taxa de
-#   reciclagem" difere ~0,1 (662,13/766,10 contra 662,26/765,98). Os ±20% / ±50% foram INFERIDOS dos
-#   números do PDF (ele não declara os percentuais).
-# cenários (seção 15). O PDF só informa os totais, não as taxas por material, então os
-# cenários movem uma fração da reciclagem <-> disposição, calibrada para reproduzir
-# a massa reciclada do PDF (854,85 kg e 1.091,92 kg). Ajuste se tiver as taxas reais.
 CENARIOS = {
     "baixa": {"nome": "Baixa recuperação", "reciclagem_para_disposicao_pct": 15.16},
     "base":  {"nome": "Base"},
@@ -91,9 +74,6 @@ ITENS_ATENCAO = [
     # "Arrefecimento/climatização" são hardware: o fluido deles está no componente "Fluidos/resíduos".
     (("oleo", "fluido", "liquido", "residuo"), "Coleta e tratamento"),
 ]
-# Limitação: o PDF lista 11 L de fluidos (4,5 + 5,0 + 1,0 + 0,5) e 11 kg de fluidos na composição, mas não dá a
-# densidade. O sistema NÃO converte L em kg: o cálculo usa os kg da composição; os litros ficam só na lista.
-#endregion constantes
 
 
 #region classificacao
