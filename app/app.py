@@ -61,7 +61,7 @@ def ErroComposicao(erros):
     resumo = "; ".join(erros[:3]) + (f" (+{len(erros) - 3})" if len(erros) > 3 else "")
     return jsonify({"erro": resumo, "erros": erros}), 400
 
-ORIGENS_DADOS = ("real", "exemplo", "referencia_pdf", "nao_informado")
+ORIGENS_DADOS = ("real", "exemplo", "referencia_pdf", "nao informado")
 
 def GarantirQRs():
     #Todo veículo e toda peça ativa precisam ter QR. Idempotente
@@ -399,7 +399,7 @@ def CriarComponente():
         peso, erro = LerNumero(dados.get("peso_kg"), "peso_kg")
         if erro:
             return jsonify({"erro": erro}), 400
-        origem = dados.get("massa_origem") or "nao_informado"
+        origem = dados.get("massa_origem") or "nao informado"
         if origem not in Inventario.ORIGENS_MASSA:
             return jsonify({"erro": f"massa_origem deve ser um de {', '.join(Inventario.ORIGENS_MASSA)}"}), 400
         itens, erros, alertas = Inventario.NormalizarComposicao(s, dados.get("composicao"), peso)
@@ -803,7 +803,7 @@ def SalvarItensEspeciais(veiculo_id):
             if destino and len(destino) > 100:
                 erros.append(f"{rot}: destino com mais de 100 caracteres")
                 continue
-            origem = b.get("origem") or "nao_informado"
+            origem = b.get("origem") or "nao informado"
             if origem not in Inventario.ORIGENS_MASSA:
                 erros.append(f"{rot}: origem deve ser uma de {', '.join(Inventario.ORIGENS_MASSA)}")
                 continue
@@ -922,7 +922,7 @@ def RemoverComponenteModelo(comp_id):
 #endregion inventario
 
 #region catalogo
-STATUS_CATALOGO = ("classificado", "nao_classificado", "outros_declarado")
+STATUS_CATALOGO = ("classificado", "nao classificado", "outros_declarado")
 
 def MaterialCatalogoJSON(m):
     return {"id": m.id, "nome": m.nome, "unidade_ref": m.unidade_ref, "descricao": m.descricao,
@@ -962,9 +962,9 @@ def AplicarCatalogo(s, m, dados):
 
     status = dados.get("status")
     if status is None:      # sem status explícito: acompanha os grupos (exceto "Outros" declarado)
-        status = m.status or "nao_classificado"
+        status = m.status or "nao classificado"
         if "grupos" in dados and status != "outros_declarado":
-            status = "classificado" if novos_grupos else "nao_classificado"
+            status = "classificado" if novos_grupos else "nao classificado"
     if status not in STATUS_CATALOGO:
         return jsonify({"erro": f"status deve ser um de {', '.join(STATUS_CATALOGO)}"}), 400
     if status == "classificado" and not novos_grupos:
@@ -1056,7 +1056,7 @@ def CriarCatalogo():
     s = GetSession()
     dados = request.get_json(silent=True) or {}
     try:
-        m = CatalogoMaterial(nome="", status="nao_classificado")
+        m = CatalogoMaterial(nome="", status="nao classificado")
         resposta = AplicarCatalogo(s, m, dados)
         if resposta:
             s.rollback()

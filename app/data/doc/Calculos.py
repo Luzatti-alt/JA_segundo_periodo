@@ -7,7 +7,7 @@ import unicodedata
 GRUPOS = ["Aço", "Ferro fundido", "Alumínio", "Cobre", "Plásticos",
           "Vidro", "Borracha", "Chumbo", "Outros"]   # seção 4 do PDF
 FLUIDOS = "Fluidos"                                    # tratado à parte (seção 11.4)
-ESQUEMA_PDF = "pdf_demo"                             # esquema de grupos do catálogo usado por este modelo
+ESQUEMA_PDF = "pdf demo"                             # esquema de grupos do catálogo usado por este modelo
 
 # seção 5: (reciclagem, reuso, valorização, disposição) em % — cada linha fecha 100
 DESTINOS_PADRAO = {
@@ -107,7 +107,7 @@ _ALIAS = {
     "vidro": "Vidro", "borracha": "Borracha", "chumbo": "Chumbo", "outros": "Outros",
 }
 
-# O grupo de cálculo de um material vem do catálogo (MaterialGrupo, esquema pdf_demo).
+# O grupo de cálculo de um material vem do catálogo (MaterialGrupo, esquema pdf demo).
 # Material desconhecido NUNCA vira "Outros" sozinho: fica sem grupo e fora do cálculo, com aviso.
 
 def ItemAtencao(categoria):

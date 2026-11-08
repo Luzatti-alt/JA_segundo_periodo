@@ -18,11 +18,21 @@ function valor(d, coluna) {
     const v = chave(coluna).split(".").reduce((o, k) => o?.[k], d);
     return formatar(v ?? d[chave(coluna)]);
 }
+// Rótulos legíveis para os códigos internos (só na exibição: o banco e a API continuam com os códigos).
+const ROTULOS = {
+    por_peca: "por peça", agregada: "agregada",
+    referencia_pdf: "referência do PDF (hipotético)", nao_informado: "não informado", referencia: "referência",
+    classificado: "classificado", nao_classificado: "não classificado", outros_declarado: "Outros (declarado)",
+    sem_composicao: "sem composição", sem_massa: "sem massa", nao_identificado: "não identificado",
+    pdf_demo: "PDF demonstrativo",
+};
+const rotulo = t => ROTULOS[t] ?? t;
+
 function formatar(v) {
     if (Array.isArray(v)) return v.map(formatar).join(", ");
     if (typeof v === "boolean") return v ? "sim" : "não";
-    if (v && typeof v === "object") return Object.entries(v).map(([k, x]) => `${k}: ${formatar(x)}`).join("; ");
-    return v;
+    if (v && typeof v === "object") return Object.entries(v).map(([k, x]) => `${rotulo(k)}: ${formatar(x)}`).join("; ");
+    return typeof v === "string" ? rotulo(v) : v;
 }
 
 const linha = (celulas, tag) => {

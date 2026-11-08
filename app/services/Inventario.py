@@ -5,7 +5,7 @@ from app.data.db import (CatalogoMaterial, ComposicaoVeiculo, Pecas, ResolverMat
 
 TOL_KG = 0.01                      # tolerância nas comparações de massa
 STATUS_ITEM = ("identificado", "nao_identificado")
-ORIGENS_MASSA = ("referencia", "medido", "estimado", "fornecedor", "nao_informado")
+ORIGENS_MASSA = ("referencia", "medido", "estimado", "fornecedor", "nao informado")   # igual ao default do banco e aos <option> dos formulários
 FONTES_COMPOSICAO = ("por_peca", "agregada")
 
 

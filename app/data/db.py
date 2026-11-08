@@ -64,7 +64,7 @@ class Veiculo(Base):
     # qual inventário o cálculo usa: "por_peca" (Pecas.composicao) ou "agregada" (ComposicaoVeiculo).
     # Nunca os dois ao mesmo tempo, senão a mesma massa seria contada duas vezes.
     fonte_composicao = Column(String(20), default="por_peca")
-    # separa o que é real do que é demonstrativo: real | exemplo (ExData) | referencia_pdf | nao_informado
+    # separa o que é real do que é demonstrativo: real | exemplo (ExData) | referencia_pdf | nao informado
     origem_dados = Column(String(20), default="real")
     motorizacao = Column(String(30), nullable=True)    # Combustão interna | Híbrido | Elétrico (sugestões no index.html)
     combustivel = Column(String(30), nullable=True)    # Flex | Gasolina | Etanol | Diesel...
@@ -91,7 +91,7 @@ class Pecas(Base):
     # Itens: {"item_uid", "material_id", "categoria", "massa_kg", "status", "origem", ...}
     # status: "identificado" | "nao_identificado". Atribua sempre uma lista nova (o JSON não rastreia mutação).
     composicao = Column(JSON, nullable=True)
-    massa_origem = Column(String(20), default="nao_informado")   # referencia|medido|estimado|fornecedor|nao_informado
+    massa_origem = Column(String(20), default="nao informado")   # referencia|medido|estimado|fornecedor|nao informado
     codigo_peca = Column(String(60), nullable=True)
     fornecedor = Column(String(100), nullable=True)
     modelo_componente_id = Column(Integer, ForeignKey('ModeloComponente.id'), nullable=True)
@@ -156,10 +156,10 @@ class CatalogoMaterial(Base):
     nome = Column(String(80), unique=True, nullable=False)
     unidade_ref = Column(String(20), default="kg")
     descricao = Column(Text)
-    # classificado: tem grupo em algum esquema | nao_classificado: conhecido, sem grupo
+    # classificado: tem grupo em algum esquema | nao classificado: conhecido, sem grupo
     # outros_declarado: alguém declarou "Outros" de propósito
     # "sem fator de emissão" NÃO é gravado: depende da metodologia, é calculado na consulta.
-    status = Column(String(30), default="nao_classificado")
+    status = Column(String(30), default="nao classificado")
     processos = Column(JSON, nullable=True)        # ex.: ["reciclagem", "reuso"]
     ativo = Column(Boolean, default=True)
     CriadoEm = Column(DateTime, default=datetime.now)
@@ -179,7 +179,7 @@ class CatalogoAlias(Base):
 
 
 class MaterialGrupo(Base):
-    #Grupo de cálculo do material em cada esquema (pdf_demo, vda, ...).#
+    #Grupo de cálculo do material em cada esquema (pdf demo, vda, ...).#
     __tablename__ = 'MaterialGrupos'
     __table_args__ = (UniqueConstraint('material_id', 'esquema'),)
     id = Column(Integer, primary_key=True)
@@ -270,7 +270,7 @@ class ItemEspecial(Base):
     quantidade = Column(Float)
     unidade = Column(String(10))                 # "L" | "kg"
     destino = Column(String(100))
-    origem = Column(String(20), default="nao_informado")   # referencia|medido|estimado|fornecedor|nao_informado
+    origem = Column(String(20), default="nao informado")   # referencia|medido|estimado|fornecedor|nao informado
 
     veiculo = relationship('Veiculo', back_populates='itens_especiais')
 
@@ -289,7 +289,7 @@ def _colunas(conn, tabela):
 # a unicidade vai em índice separado.
 COLUNAS_V1 = [
     ("Pecas", "composicao", "JSON"),
-    ("Pecas", "massa_origem", "VARCHAR(20) DEFAULT 'nao_informado'"),
+    ("Pecas", "massa_origem", "VARCHAR(20) DEFAULT 'nao informado'"),
     ("Pecas", "codigo_peca", "VARCHAR(60)"),
     ("Pecas", "fornecedor", "VARCHAR(100)"),
     ("Pecas", "modelo_componente_id", "INTEGER REFERENCES ModeloComponente(id)"),
@@ -312,13 +312,13 @@ def _mig_1(conn):
     conn.exec_driver_sql('CREATE UNIQUE INDEX IF NOT EXISTS ux_qrs_codigo ON "QRs"(codigo)')
 
 def _mig_2(conn):
-    # bancos anteriores: não dá para saber se o veículo é real ou exemplo -> 'nao_informado' (nunca chuta 'real')
+    # bancos anteriores: não dá para saber se o veículo é real ou exemplo -> 'nao informado' (nunca chuta 'real')
     if "origem_dados" not in _colunas(conn, "Veiculo"):
-        conn.exec_driver_sql("ALTER TABLE \"Veiculo\" ADD COLUMN origem_dados VARCHAR(20) DEFAULT 'nao_informado'")
+        conn.exec_driver_sql("ALTER TABLE \"Veiculo\" ADD COLUMN origem_dados VARCHAR(20) DEFAULT 'nao informado'")
     for col in ("motorizacao", "combustivel"):
         if col not in _colunas(conn, "Veiculo"):
             conn.exec_driver_sql(f'ALTER TABLE "Veiculo" ADD COLUMN {col} VARCHAR(30)')
-    conn.exec_driver_sql("UPDATE Veiculo SET origem_dados='nao_informado' WHERE origem_dados IS NULL")
+    conn.exec_driver_sql("UPDATE Veiculo SET origem_dados='nao informado' WHERE origem_dados IS NULL")
 
 MIGRACOES = [
     (1, "Composicao JSON, catalogo, QR permanente, remocao logica", _mig_1),
@@ -356,7 +356,7 @@ def _norm(txt):
     from app.data.doc.Calculos import _norm as n    # import local evita circular
     return n(txt)
 
-def NovoMaterial(s, nome, status="nao_classificado", grupos=None, aliases=(), descricao=None):
+def NovoMaterial(s, nome, status="nao classificado", grupos=None, aliases=(), descricao=None):
     #Cria material + alias com o próprio nome. grupos: {esquema: grupo}. Não faz commit.#
     m = CatalogoMaterial(nome=nome.strip(), status=status, descricao=descricao)
     vistos = set()
@@ -392,11 +392,11 @@ def SeedCatalogo():
                 if ResolverMaterial(s, g, criar=False) is None:
                     extras = [k for k, v in _ALIAS.items() if v == g]
                     NovoMaterial(s, g, "outros_declarado" if g == "Outros" else "classificado",
-                                 {"pdf_demo": g}, extras)
+                                 {"pdf demo": g}, extras)
             for nome, grupo in MATERIAIS_EXTRA:
                 if ResolverMaterial(s, nome, criar=False) is None:
-                    NovoMaterial(s, nome, "classificado" if grupo else "nao_classificado",
-                                 {"pdf_demo": grupo} if grupo else None)
+                    NovoMaterial(s, nome, "classificado" if grupo else "nao classificado",
+                                 {"pdf demo": grupo} if grupo else None)
             s.commit()
         except Exception as e:
             s.rollback()

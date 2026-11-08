@@ -112,7 +112,7 @@ $("btnSalvarAgg").addEventListener("click", async () => {
 
 //#region especiais
 // Componentes e resíduos especiais (PDF, seção 5): informação de rota/tratamento, não entra nas emissões.
-const ORIGENS_ESPECIAL = ["nao_informado", "referencia", "medido", "estimado", "fornecedor"];
+const ORIGENS_ESPECIAL = ["nao informado", "referencia", "medido", "estimado", "fornecedor"];
 
 function linhaEspecial(i = {}) {
     const item = el("input", { type: "text", value: i.item ?? "", placeholder: "Óleo lubrificante" });
@@ -121,7 +121,7 @@ function linhaEspecial(i = {}) {
     un.value = i.unidade ?? "";
     const destino = el("input", { type: "text", value: i.destino ?? "", placeholder: "Coleta e tratamento" });
     const origem = el("select", {}, ...ORIGENS_ESPECIAL.map(o => el("option", { value: o, textContent: o })));
-    origem.value = i.origem ?? "nao_informado";
+    origem.value = i.origem ?? "nao informado";
     const tr = linha(item, qtd, un, destino, origem, botao("Remover", () => tr.remove()));
     return tr;
 }
@@ -171,7 +171,7 @@ async function abrirPeca(id) {
             const f = $("pecaForm");
             f.elements.categoria.value = c.categoria ?? "";
             f.elements.peso_kg.value = c.peso_kg ?? "";
-            f.elements.massa_origem.value = c.massa_origem ?? "nao_informado";
+            f.elements.massa_origem.value = c.massa_origem ?? "nao informado";
             f.elements.codigo_peca.value = c.codigo_peca ?? "";
             f.elements.fornecedor.value = c.fornecedor ?? "";
             editorPeca.definir(c.composicao);

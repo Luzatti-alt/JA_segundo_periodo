@@ -100,10 +100,10 @@ def SeedReferenciaPDF(componentes=None, composicao=None):
             for categoria, kg in componentes:
                 s.add(Pecas(veiculo=v, Categoria=categoria, Peso=kg, composicao=None, massa_origem="referencia"))
             for nome, kg in composicao:
-                mat = ResolverMaterial(s, nome)          # desconhecido entra como 'nao_classificado', nunca "Outros"
-                if mat.status == "nao_classificado":
+                mat = ResolverMaterial(s, nome)          # desconhecido entra como 'nao classificado', nunca "Outros"
+                if mat.status == "nao classificado":
                     avisos.append(f"material '{nome}' está sem classificação no catálogo: "
-                                  f"não entrará no cálculo até receber grupo (pdf_demo)")
+                                  f"não entrará no cálculo até receber grupo (pdf demo)")
                 s.add(ComposicaoVeiculo(veiculo=v, material_id=mat.id, categoria_texto=nome, massa_kg=kg,
                                         origem="referencia", fonte=FONTE_PDF))
             # atividade gravada explicitamente (valores hipotéticos do PDF), para o cálculo não cair no padrão em silêncio

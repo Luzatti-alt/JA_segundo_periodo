@@ -1,5 +1,5 @@
 // static/scripts/Catalogo.js — telas do /Catalogo (API) sem regra de negócio: o Python valida tudo.
-const { api, el } = Pegada;
+const { api, el, rotulo, limpar, codigoDe } = Pegada;
 
 const STATUS_ROTULO = { classificado: "classificado", nao_classificado: "não classificado", outros_declarado: "Outros (declarado)" };
 
@@ -16,15 +16,15 @@ let espera;
 
 const campo = nome => formCat.elements[nome];
 const linhasDe = txt => txt.split("\n").map(x => x.trim()).filter(Boolean);
-const mostrar = (texto, tipo = "") => { msgCat.textContent = texto; msgCat.className = `ModalMensagem ${tipo}`; };
+const mostrar = (texto, tipo = "") => { msgCat.textContent = limpar(texto); msgCat.className = `ModalMensagem ${tipo}`; };
 
-function gruposParaTexto(g) { return Object.entries(g || {}).map(([e, v]) => `${e}=${v}`).join("\n"); }
+function gruposParaTexto(g) { return Object.entries(g || {}).map(([e, v]) => `${rotulo(e)}=${v}`).join("\n"); }
 function textoParaGrupos(txt) {
     const grupos = {};
     for (const l of linhasDe(txt)) {
         const i = l.indexOf("=");
         if (i < 1 || i === l.length - 1) throw new Error(`Grupo inválido: "${l}" (use esquema=grupo)`);
-        grupos[l.slice(0, i).trim()] = l.slice(i + 1).trim();
+        grupos[codigoDe(l.slice(0, i))] = l.slice(i + 1).trim();      // aceita o rótulo ("PDF demonstrativo") ou o código
     }
     return grupos;
 }
@@ -41,14 +41,14 @@ async function carregarLista() {
             const editar = el("button", { type: "button", textContent: "Editar" });
             editar.addEventListener("click", () => abrir(m.id));
             return el("tr", {}, ...[m.id, m.nome, STATUS_ROTULO[m.status] ?? m.status,
-                Object.entries(m.grupos).map(([e, g]) => `${e}: ${g}`).join(", ") || "—",
+                Object.entries(m.grupos).map(([e, g]) => `${rotulo(e)}: ${g}`).join(", ") || "—",
                 m.aliases.filter(a => a !== m.nome).join(", "), m.ativo ? "sim" : "não"]
                 .map(t => el("td", { textContent: t })), el("td", {}, editar));
         });
         tabela.replaceChildren(cab, ...linhas);
         if (!itens.length) tabela.append(el("tr", {}, el("td", { colSpan: 7, textContent: "Nenhum material encontrado." })));
     } catch (e) {
-        erroCat.textContent = `Não foi possível carregar o catálogo: ${e.message}`;
+        erroCat.textContent = limpar(`Não foi possível carregar o catálogo: ${e.message}`);
         erroCat.hidden = false;
     }
 }
@@ -119,7 +119,7 @@ btnExcluir.addEventListener("click", async () => {
         mostrar("Material excluído.", "ok");
         await carregarLista();
     } catch (erro) {
-        if (erro.corpo?.uso && confirm(`${erro.message}\n\nDesativar este material agora?`)) {
+        if (erro.corpo?.uso && confirm(`${limpar(erro.message)}\n\nDesativar este material agora?`)) {
             try {
                 await api(`/Catalogo/${editandoId}`, { method: "PUT", body: JSON.stringify({ ativo: false }) });
                 await carregarLista();

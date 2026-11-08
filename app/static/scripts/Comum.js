@@ -135,5 +135,20 @@ const Pegada = (() => {
         };
     }
 
-    return { api, num, el, preencherLista, resumoIndicadores, carregarCatalogo, EditorComposicao };
+    // Rótulos legíveis para códigos internos (só exibição: o banco e a API continuam com os códigos).
+    const ROTULOS = {
+        por_peca: "por peça", agregada: "agregada",
+        referencia_pdf: "referência do PDF (hipotético)", nao_informado: "não informado", referencia: "referência",
+        classificado: "classificado", nao_classificado: "não classificado", outros_declarado: "Outros (declarado)",
+        sem_composicao: "sem composição", sem_massa: "sem massa", nao_identificado: "não identificado",
+        pdf_demo: "PDF demonstrativo",
+    };
+    const rotulo = t => ROTULOS[t] ?? t;
+    // texto livre (mensagens da API): troca os códigos conhecidos pelos rótulos
+    const _codigos = new RegExp(`\\b(${Object.keys(ROTULOS).sort((a, b) => b.length - a.length).join("|")})\\b`, "g");
+    const limpar = texto => String(texto ?? "").replace(_codigos, c => ROTULOS[c]);
+    // caminho inverso: o que o usuário digitou (rótulo ou código) -> código
+    const codigoDe = t => Object.keys(ROTULOS).find(k => ROTULOS[k].toLowerCase() === String(t).trim().toLowerCase()) ?? t;
+
+    return { api, num, el, preencherLista, resumoIndicadores, carregarCatalogo, EditorComposicao, rotulo, limpar, codigoDe };
 })();

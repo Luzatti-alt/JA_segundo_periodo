@@ -109,7 +109,7 @@ class QR:
 class PDF:
     ROTULO_ORIGEM = {"exemplo": "DADOS DE EXEMPLO (demonstrativo)",
                      "referencia_pdf": "CENÁRIO HIPOTÉTICO DE REFERÊNCIA (PDF) - não são dados medidos",
-                     "nao_informado": "Origem dos dados não informada"}
+                     "nao informado": "Origem dos dados não informada"}
 
     @staticmethod
     def _txt(x):
@@ -126,7 +126,7 @@ class PDF:
         for i in itens:
             nome = i.get("categoria") or "não identificado"
             marca = ""
-            if i.get("material_id") in catalogo and catalogo[i["material_id"]][1] == "nao_classificado":
+            if i.get("material_id") in catalogo and catalogo[i["material_id"]][1] == "nao classificado":
                 marca = " [sem classificação]"
             partes.append(f"{escape(nome)} ({i.get('massa_kg', 0):g} kg){marca}")
         return Paragraph(", ".join(partes), estilo)
@@ -192,7 +192,7 @@ class PDF:
                 linhas = [["Material", "Massa (kg)", "Origem", "Fonte"]]
                 for c in agreg:
                     nome = catalogo[c.material_id][0] if c.material_id in catalogo else c.categoria_texto
-                    sem_class = c.material_id in catalogo and catalogo[c.material_id][1] == "nao_classificado"
+                    sem_class = c.material_id in catalogo and catalogo[c.material_id][1] == "nao classificado"
                     linhas.append([Paragraph(PDF._txt(nome) + (" [sem classificação]" if sem_class else ""), e['Normal']),
                                    PDF._txt(c.massa_kg), PDF._txt(c.origem),
                                    Paragraph(PDF._txt(c.fonte), e['Normal'])])
