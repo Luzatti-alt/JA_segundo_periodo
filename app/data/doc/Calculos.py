@@ -63,6 +63,14 @@ RESULTADO_PDF = {"total": 723.69, "reciclagem": 666.41, "diesel": 21.36, "transp
                  "disposicao": 13.16, "tratamento_fluidos": 3.30, "eletricidade": 1.60,
                  "beneficio": 2418.01}
 
+# CONFERÊNCIA COM O PDF (cenário-base, veículo de referência completo):
+#   total, reciclagem, diesel, transporte, disposição, fluidos, eletricidade, benefício e saldo: IGUAIS ao PDF.
+#   Cenários: massa reciclada/taxa/massa disposta batem (≤ 0,01 kg), mas a emissão bruta DIVERGE:
+#     baixa 645,27 (PDF 641,74) e alta 766,21 (PDF 769,93). Causa provável: o PDF não informa as taxas por
+#     material; aqui a variação é uniforme em todos os materiais. Não há como fechar sem esses dados.
+#   Sensibilidade: FE do aço, FE do alumínio, distâncias e eletricidade batem exatamente; "taxa de
+#   reciclagem" difere ~0,1 (662,13/766,10 contra 662,26/765,98). Os ±20% / ±50% foram INFERIDOS dos
+#   números do PDF (ele não declara os percentuais).
 # cenários (seção 15). O PDF só informa os totais, não as taxas por material, então os
 # cenários movem uma fração da reciclagem <-> disposição, calibrada para reproduzir
 # a massa reciclada do PDF (854,85 kg e 1.091,92 kg). Ajuste se tiver as taxas reais.
@@ -78,8 +86,12 @@ ITENS_ATENCAO = [
     (("pneu",), "Rotas específicas"),
     (("catalisador",), "Recuperação de materiais"),
     (("eletron", "modulo", "chicote"), "Reciclagem especializada"),
-    (("oleo", "arrefecimento", "freio", "combustivel", "fluido", "liquido"), "Coleta e tratamento"),
+    # só itens que SÃO fluido/resíduo. "Sistema de freios", "Sistema de combustível" e
+    # "Arrefecimento/climatização" são hardware: o fluido deles está no componente "Fluidos/resíduos".
+    (("oleo", "fluido", "liquido", "residuo"), "Coleta e tratamento"),
 ]
+# Limitação: o PDF (seção 6) dá quantidades em litros (óleo 4,5 L, arrefecimento 5,0 L, freio 1,0 L,
+# combustível residual 0,5 L). O sistema só guarda os 11 kg agregados; a lista é detectada pelo nome do componente.
 #endregion constantes
 
 
@@ -94,13 +106,8 @@ _ALIAS = {
     "vidro": "Vidro", "borracha": "Borracha", "chumbo": "Chumbo", "outros": "Outros",
 }
 
-def GrupoMaterial(categoria):
-    n = _norm(categoria)
-    if n in _ALIAS:
-        return _ALIAS[n]
-    if any(p in n for p in ("fluido", "liquido", "oleo", "combustivel")):
-        return FLUIDOS
-    return "Outros"
+# O grupo de cálculo de um material vem do catálogo (MaterialGrupo, esquema pdf_demo).
+# Material desconhecido NUNCA vira "Outros" sozinho: fica sem grupo e fora do cálculo, com aviso.
 
 def ItemAtencao(categoria):
     n = _norm(categoria)

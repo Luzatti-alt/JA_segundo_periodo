@@ -1,4 +1,3 @@
-/* Acrescente ao FINAL do seu Calculos.css (não substitui nada). Usa só herança do base.css. */
 .CalcControle {
     display: flex;
     flex-wrap: wrap;
@@ -6,66 +5,75 @@
     gap: 1rem;
 }
 .CalcControle h2 {
-    flex-basis: 100%;
-
+    flex-basis: 100%; 
+    margin: 0;
 }
 .CalcControle label {
-    display: flex;
-    flex-direction: column;
-    gap: .25rem;
-    min-width: 18rem;
+    flex: 1 1 18rem;
+    max-width: 32rem;
 }
 
 .CalcResumo {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
     gap: 1rem;
-    margin: 1rem 0;
+    margin-bottom: 1.25rem;
 }
 .CalcCartao {
     display: flex;
     flex-direction: column;
     gap: .25rem;
     padding: 1rem;
-    border: 1px solid #888;
-    border-radius: .5rem; }
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-top: 3px solid var(--acento);
+    border-radius: var(--raio);
+}
+.CalcCartao span {
+    color: var(--texto-suave);
+    font-size: .85rem;
+}
 .CalcCartao strong {
     font-size: 1.5rem;
+    line-height: 1.2;
 }
 .CalcCartao small {
-    opacity: .7;
+    color: var(--texto-suave);
 }
-summary, p,h2,td,tr,li,span,strong,small{
-    color: white;
+
+#calcBanner {
+    margin-top: 0;
 }
+#listaAvisos {
+    margin-bottom: 0;
+}
+
 .CalcGrade {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-    gap: .75rem;
-    padding: .75rem 0; }
-.CalcGrade label {
-    display: flex;
-    flex-direction: column;
-    gap: .25rem;
+    gap: .75rem 1rem;
+    padding: .75rem 0;
+    align-items: end;
 }
-
 .CalcParametros details {
     margin: .75rem 0;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    background: var(--superficie-2);
 }
 .CalcParametros summary {
+    padding: .65rem .9rem;
+    font-weight: 600;
     cursor: pointer;
-    padding: .5rem 0;
-    font-weight: bold;
+}
+.CalcParametros details[open] summary {
+    border-bottom: 1px solid var(--borda);
+}
+.CalcParametros details > .Tabela, .CalcParametros details > form {
+    margin: .75rem;
 }
 .CalcParametros td input {
     width: 100%;
-    min-width: 5rem; }
-
-.Nota {
-    opacity: .75;
-    font-size: .9rem;
-    margin: .5rem 0;
-}
-#listaAvisos {
-    padding-left: 1.25rem;
+    min-width: 5rem;
+    padding: .3rem .5rem;
 }

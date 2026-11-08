@@ -1,44 +1,322 @@
 @charset "UTF-8";
-html{
-    width: 100%;
-    height: 100%;
-}
-*{
-    padding: 0;
-    margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
+
+:root {
+    color-scheme: dark;
+    --fundo: #0e1210;
+    --superficie: #171c19;
+    --superficie-2: #212824;
+    --borda: #333d37;
+    --texto: #edf2ee;
+    --texto-suave: #a2aea6;
+    --acento: #6fd18a;
+    --acento-fundo: #2e7d46;
+    --acento-fundo-hover: #379052;
+    --perigo: #ef7a6b;
+    --perigo-fundo: #b5382b;
+    --perigo-fundo-hover: #cc4535;
+    --raio: 10px;
+    --espaco: 1rem;
 }
 
-body{
-    background-color: #000000;
-    width: 100%;
-    min-height: 100%;
+*, *::before, *::after {
+    box-sizing: border-box;
 }
-header{
-    background-color: #3E3E3E;
+
+[hidden] {
+    display: none !important;
+}
+
+html {
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+    line-height: 1.5;
+}
+.CabecalhoSite {
+    position: sticky;
+    top: 0;
+    z-index: 50;
     display: flex;
-    flex-direction: row;
-    gap: 40%;
-    padding: 2%;
+    flex-wrap: wrap;
     align-items: center;
-    margin-bottom: 2vh;
+    justify-content: space-between;
+    gap: .5rem 1.5rem;
+    padding: .75rem 1.25rem;
+    background: var(--superficie);
+    border-bottom: 1px solid var(--borda);
 }
-h1, h2{
-    color: white;
+.Marca {
+    color: var(--texto);
+    font-size: 1.35rem;
+    font-weight: 700;
+    text-decoration: none;
 }
-nav{
+.Marca span {
+    color: var(--acento);
+}
+.CabecalhoSite nav {
     display: flex;
-    gap: 24px;
-    padding: 8px 16px;
+    flex-wrap: wrap;
+    gap: .25rem;
 }
-nav a{
-    color: white;
+.CabecalhoSite nav a {
+    padding: .4rem .8rem;
+    border-radius: 999px;
+    color: var(--texto-suave);
+    text-decoration: none;
 }
-main{
-    width: 100%;
-    height: 100%;
+.CabecalhoSite nav a:hover {
+    color: var(--texto);
+    background: var(--superficie-2);
+}
+.CabecalhoSite nav a[aria-current="page"] {
+    color: var(--texto);
+    background: var(--superficie-2);
+    box-shadow: inset 0 -2px 0 var(--acento);
+}
+
+main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+}
+h1, h2, h3 {
+    color: var(--texto);
+    line-height: 1.25;
+    margin: 0 0 .6rem;
+}
+h1 {
+    font-size: 1.6rem;
+}
+h2 {
+    font-size: 1.2rem;
+}
+h3 {
+    font-size: 1rem;
+    color: var(--texto-suave);
+    margin-top: .5rem;
+}
+p {
+    margin: 0 0 .75rem;
+}
+a {
+    color: var(--acento);
+}
+a:hover {
+    text-decoration: none;
+}
+
+.Painel {
+    margin-bottom: 1.25rem;
+    padding: 1.25rem;
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+}
+
+.Nota {
+    margin: .5rem 0 .9rem;
+    padding: .55rem .8rem;
+    color: var(--texto-suave);
+    font-size: .9rem;
+    background: var(--superficie-2);
+    border-left: 3px solid var(--borda);
+    border-radius: 0 6px 6px 0;
+}
+.Aviso {
+    margin: .5rem 0 .9rem;
+    padding: .6rem .8rem;
+    background: rgba(239, 122, 107, .12);
+    border-left: 3px solid var(--perigo);
+    border-radius: 0 6px 6px 0;
+}
+.ModalMensagem {
+    margin: 0 0 .75rem;
+    font-size: .9rem;
+}
+.ModalMensagem:empty {
+    display: none;
+}
+.ModalMensagem.ok {
+    color: var(--acento);
+}
+.ModalMensagem.erro {
+    color: var(--perigo);
+}
+ul {
+    margin: 0 0 .75rem;
+    padding-left: 1.25rem;
+}
+ul:empty {
+    display: none;
+}
+li {
+    margin: .15rem 0;
+}
+
+button, .BotaoLink {
+    display: inline-block;
+    padding: .5rem 1rem;
+    color: var(--texto);
+    font: inherit;
+    font-size: .95rem;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    background: var(--superficie-2);
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+}
+button:hover, .BotaoLink:hover {
+    background: #2b342f;
+    border-color: #46534b;
+}
+button[type="submit"], .BtnConfirmar {
+    color: #fff;
+    background: var(--acento-fundo);
+    border-color: var(--acento-fundo);
+}
+button[type="submit"]:hover, .BtnConfirmar:hover {
+    background: var(--acento-fundo-hover);
+    border-color: var(--acento-fundo-hover);
+}
+button:disabled { opacity: .55; cursor: not-allowed; }
+.BtnPerigo, button[id^="btnRemover"], #btnExcluirCat {
+    color: #fff;
+    background: var(--perigo-fundo);
+    border-color: var(--perigo-fundo);
+}
+.BtnPerigo:hover, button[id^="btnRemover"]:hover, #btnExcluirCat:hover {
+    background: var(--perigo-fundo-hover);
+    border-color: var(--perigo-fundo-hover);
+}
+:focus-visible {
+    outline: 2px solid var(--acento);
+    outline-offset: 2px;
+}
+
+label {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    gap: .3rem;
+    color: var(--texto-suave);
+    font-size: .9rem;
+}
+label:has(> input[type="checkbox"]) {
+    flex-direction: row;
     align-items: center;
+    gap: .5rem;
+}
+input, select, textarea {
+    width: 100%;
+    padding: .55rem .7rem;
+    color: var(--texto);
+    font: inherit;
+    background: var(--fundo);
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+}
+input[type="checkbox"] {
+    width: auto;
+    accent-color: var(--acento-fundo);
+}
+input::placeholder, textarea::placeholder {
+    color: #6f7b74;
+}
+input:disabled, select:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+textarea {
+    resize: vertical;
+}
+
+.Formulario {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: .9rem 1rem;
+}
+.Formulario > :is(h3, div, p, ul, fieldset, .ModalAcoes, label:has(textarea)) {
+    grid-column: 1 / -1;
+}
+.Seletores {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: .9rem 1rem;
+    margin-bottom: .75rem; }
+.Filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: 1rem;
+}
+.Filtros input[type="search"] {
+    flex: 1 1 16rem;
+    width: auto;
+}
+.Filtros select {
+    flex: 0 1 12rem;
+    width: auto;
+}
+.ModalAcoes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .5rem;
+}
+
+.Tabela {
+    margin-bottom: .9rem;
+    overflow-x: auto;
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .92rem;
+}
+th, td {
+    padding: .55rem .8rem;
+    text-align: center;
+    vertical-align: top;
+    border-bottom: 1px solid var(--borda);
+}
+th {
+    color: var(--texto-suave);
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    background: var(--superficie-2);
+}
+tr:last-child td {
+    border-bottom: 0;
+}
+tr:hover td {
+    background: rgba(255, 255, 255, .03);
+}
+td button {
+    padding: .25rem .7rem;
+    font-size: .85rem;
+}
+
+@media (max-width: 600px) {
+    main {
+        padding: 1rem .75rem 2rem;
+    }
+    .Painel {
+        padding: .9rem;
+    }
+    .CabecalhoSite {
+        padding: .6rem .75rem;
+    }
 }

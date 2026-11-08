@@ -1,67 +1,49 @@
-section{
-    width: min(1000px, 100%);
-    margin-bottom: 24px;
-    color: white;
+main > section {
+    scroll-margin-top: 5rem;
 }
-section h2{
-    color: white;
-    margin-bottom: 8px;
+#invBanner {
+    padding: .6rem .8rem;
+    background: var(--superficie-2);
+    border-left: 3px solid var(--acento);
+    border-radius: 0 6px 6px 0;
 }
-.Tabela{
-    overflow-x: auto;
+#linkCalculo {
+    margin-left: .5rem;
 }
-table{
-    border-collapse: collapse;
-    width: 100%;
-    color: white;
-}
-th, td{
-    padding: 6px 10px;
-    border: 1px solid #4a4a4a;
-    text-align: center;
-}
-th{
-    background: #2b2b2b;
-}
-td.num{
-    text-align: center;
-}
-.Aviso{
-    color: #ff8f8f;
-    margin: 8px 0;
-}
-.ControleDB{
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 2vh;
-}
-.Veiculo, .Componentes, .Material{
-    display: flex;
-    flex-direction: column;
-    margin-left: 5%;
-    margin-right: 5%;
-}
-.Calcs{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 2vh;
-}
-button{
-    width: var(--btn-largura);
-    height: var(--btn-altura);
-    background-color: #1c1c1c;
-    padding: 5px;
-    margin-top: 2vh;
-    border-radius: 10px;
-    border-style: groove;
-    text-align: center;
-    cursor: pointer;
+#btnNovaPeca, #btnNovoModComp, #btnNovoCat {
+    margin-top: .25rem;
 }
 
-button:hover{
-    background-color: #274a19;/*trocar cor dps*/
+.ComposicaoLinhas {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    margin-bottom: .5rem;
+}
+.ComposicaoItem {
+    display: grid;
+    grid-template-columns: minmax(10rem, 2fr) minmax(5rem, 1fr) minmax(9rem, 1.2fr) auto;
+    gap: .5rem;
+    align-items: center;
+    padding: .6rem;
+    background: var(--superficie-2);
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+}
+.ComposicaoItem small {
+    grid-column: 1 / -1;
+    color: var(--texto-suave);
+}
+.ComposicaoItem small:empty {
+    display: none;
+}
+#pecaComposicao > div:last-child, #modCompComposicao > div:last-child {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+@media (max-width: 600px) {
+    .ComposicaoItem { grid-template-columns: 1fr 1fr; }
+    .ComposicaoItem input[type="text"] { grid-column: 1 / -1; }
 }

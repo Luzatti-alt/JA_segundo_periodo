@@ -8,9 +8,22 @@ CHASSI_REF = "REF-PDF-0001"
 FONTE_PDF = 'PDF "Parte 1 - Modelo hipotético de cálculo da pegada de carbono"'
 
 MASSA_TOTAL_KG = 1200.0
-# PREENCHER com os dados do PDF:
-COMPONENTES_PDF = []          # [("Categoria do componente", massa_kg), ...]  -> 24 itens
-COMPOSICAO_GLOBAL_PDF = []    # [("Material", massa_kg), ...]                 -> composição global do veículo
+# Dados hipotéticos do PDF "Parte 1" (seção 3 = componentes, seção 4 = composição global).
+# O PDF NÃO informa a composição de cada componente: só a massa dele e a composição global do veículo.
+COMPONENTES_PDF = [          # [("Componente", massa_kg), ...]  -> 24 itens, somam 1.200 kg
+    ("Carroceria e painéis estruturais", 390), ("Chassi e subestruturas", 110), ("Motor", 130),
+    ("Transmissão", 65), ("Suspensão e direção", 50), ("Sistema de freios", 28), ("Rodas", 28),
+    ("Pneus", 40), ("Vidros", 32), ("Bancos", 65), ("Painel e revestimentos internos", 50),
+    ("Para-choques e acabamentos", 35), ("Chicote elétrico", 15), ("Módulos eletrônicos", 15),
+    ("Bateria 12 V", 15), ("Sistema de escapamento", 16), ("Catalisador", 4),
+    ("Arrefecimento/climatização", 30), ("Sistema de combustível", 18),
+    ("Airbags/dispositivos de segurança", 10), ("Faróis e lanternas", 8), ("Isolamentos", 10),
+    ("Fixadores", 25), ("Fluidos/resíduos", 11),
+]
+COMPOSICAO_GLOBAL_PDF = [    # [("Material", massa_kg), ...]  -> 1.189 kg sólidos + 11 kg fluidos = 1.200 kg
+    ("Aço", 585), ("Ferro fundido", 128), ("Alumínio", 101), ("Cobre", 28), ("Plásticos", 193),
+    ("Vidro", 33), ("Borracha", 50), ("Chumbo", 13), ("Outros", 58), ("Fluidos", 11),
+]
 
 
 def _validar(componentes, composicao):
@@ -59,6 +72,9 @@ def SeedReferenciaPDF(componentes=None, composicao=None):
                 s.add(Pecas(veiculo=v, Categoria=categoria, Peso=kg, composicao=None, massa_origem="referencia"))
             for nome, kg in composicao:
                 mat = ResolverMaterial(s, nome)          # desconhecido entra como 'nao_classificado', nunca "Outros"
+                if mat.status == "nao_classificado":
+                    avisos.append(f"material '{nome}' está sem classificação no catálogo: "
+                                  f"não entrará no cálculo até receber grupo (pdf_demo)")
                 s.add(ComposicaoVeiculo(veiculo=v, material_id=mat.id, categoria_texto=nome, massa_kg=kg,
                                         origem="referencia", fonte=FONTE_PDF))
             # atividade gravada explicitamente (valores hipotéticos do PDF), para o cálculo não cair no padrão em silêncio

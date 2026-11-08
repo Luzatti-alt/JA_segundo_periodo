@@ -4,38 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventário e composição</title>
-    <link rel="stylesheet" href="../static/styles/Data.css">
     <link rel="stylesheet" href="../static/styles/base.css">
+    <link rel="stylesheet" href="../static/styles/Data.css">
     <script src="../static/scripts/Comum.js" defer></script>
     <script src="../static/scripts/InventarioVeiculo.js" defer></script>
 </head>
 <body>
-    <header>
-        <div class="home">
-            <h1>Pegada+</h1><!--nome placehoarder-->
-        </div>
-        <nav>
-            <a href="{{url_for('Home')}}">Início</a>
-            <a href="{{url_for('Dados')}}">Dados</a>
-            <a href="{{url_for('QRLista')}}">QRs</a>
-            <a href="{{url_for('CatalogoPagina')}}">Catálogo</a>
-            <a href="{{url_for('InventarioPagina')}}" aria-current="page">Inventário</a>
-            <a href="{{url_for('Calculos')}}">Calculos</a>
-        </nav>
-    </header>
+    {% include 'cabecalho.html' %}
     <main>
         <!-- ============ veículo individual ============ -->
-        <section id="veiculo">
+        <section class="Painel" id="veiculo">
             <h1>Inventário do veículo</h1>
-            <label>Veículo
-                <select id="invVeiculo"></select>
-            </label>
-            <label>Fonte da composição
-                <select id="invFonte" disabled>
-                    <option value="por_peca">Por peça (JSON em cada componente)</option>
-                    <option value="agregada">Agregada (composição global do veículo)</option>
-                </select>
-            </label>
+            <div class="Seletores">
+                <label>Veículo
+                    <select id="invVeiculo"></select>
+                </label>
+                <label>Fonte da composição
+                    <select id="invFonte" disabled>
+                        <option value="por_peca">Por peça (JSON em cada componente)</option>
+                        <option value="agregada">Agregada (composição global do veículo)</option>
+                    </select>
+                </label>
+            </div>
             <p class="Nota">Só uma fonte vale por vez: assim a mesma massa nunca é contada duas vezes.</p>
             <p class="Aviso" id="invErro" hidden></p>
 
@@ -48,15 +38,15 @@
                 <h2>Peças</h2>
                 <div class="Tabela"><table id="tabInvPecas"></table></div>
                 <button type="button" id="btnNovaPeca">Novo componente</button>
-                <a id="linkCalculo" href="#">Calcular este veículo</a>
+                <a id="linkCalculo" class="BotaoLink" href="#">Calcular este veículo</a>
             </div>
         </section>
 
-        <section id="peca" hidden>
+        <section class="Painel" id="peca" hidden>
             <h2 id="pecaTitulo"></h2>
             <p class="Nota" id="pecaNotaFonte" hidden>A fonte deste veículo é "agregada": a composição por peça é ignorada
                 nos indicadores e no cálculo.</p>
-            <form id="pecaForm">
+            <form id="pecaForm" class="Formulario">
                 <label>Categoria
                     <input name="categoria" required placeholder="Motor, bateria, pneus...">
                 </label>
@@ -91,13 +81,15 @@
         </section>
 
         <!-- ============ inventário-base do modelo ============ -->
-        <section id="modelo">
+        <section class="Painel" id="modelo">
             <h1>Inventário-base por modelo</h1>
             <p class="Nota">Valores de <b>referência</b>: ao criar um veículo com "copiar inventário", eles são copiados
                 como referência (não como medidos) e devem ser confirmados ou trocados na inspeção.</p>
-            <label>Modelo
-                <select id="modModelo"></select>
-            </label>
+            <div class="Seletores">
+                <label>Modelo
+                    <select id="modModelo"></select>
+                </label>
+            </div>
             <p class="Aviso" id="modErro" hidden></p>
             <div id="modConteudo" hidden>
                 <div class="Tabela"><table id="tabModComp"></table></div>
@@ -105,9 +97,9 @@
             </div>
         </section>
 
-        <section id="modComp" hidden>
+        <section class="Painel" id="modComp" hidden>
             <h2 id="modCompTitulo"></h2>
-            <form id="modCompForm">
+            <form id="modCompForm" class="Formulario">
                 <label>Categoria
                     <input name="categoria" required>
                 </label>

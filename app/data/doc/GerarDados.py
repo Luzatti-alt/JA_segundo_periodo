@@ -10,7 +10,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table
 
-from app.data.db import Session, QRFiles, LinkTemporario
+from app.data.db import Session, QRFiles, LinkTemporario, ComposicaoVeiculo
 from app.services import Inventario
 
 PASTA_QRS = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'temp')
@@ -186,15 +186,42 @@ class PDF:
             for m in inv["motivos_parcial"]:
                 itens.append(Paragraph(f"- {escape(m)}", e['Normal']))
             itens.append(Spacer(1, 8))
-            linhas = [["Peça", "Peso (kg)", "Origem massa", "Composição (cobertura)", "Materiais"]]
-            for p in v.pecas:
-                if p.removido_em is not None:
-                    continue
-                ind = Inventario.IndicadoresPeca(p, catalogo)
-                linhas.append([Paragraph(PDF._txt(p.Categoria), e['Normal']), PDF._txt(p.Peso),
-                               PDF._txt(p.massa_origem), PDF._indicadores_texto(ind),
-                               PDF._composicao(p, catalogo, e['Normal'])])
-            itens.append(Table(linhas, colWidths=[75, 45, 60, 75, 245], style=estilo_tab))
+            if inv["fonte_composicao"] == "agregada":
+                # composição GLOBAL do veículo (é ela que vale); a das peças não se aplica nesta fonte
+                agreg = s.query(ComposicaoVeiculo).filter(ComposicaoVeiculo.veiculo_id == v.id).all()
+                linhas = [["Material", "Massa (kg)", "Origem", "Fonte"]]
+                for c in agreg:
+                    nome = catalogo[c.material_id][0] if c.material_id in catalogo else c.categoria_texto
+                    sem_class = c.material_id in catalogo and catalogo[c.material_id][1] == "nao_classificado"
+                    linhas.append([Paragraph(PDF._txt(nome) + (" [sem classificação]" if sem_class else ""), e['Normal']),
+                                   PDF._txt(c.massa_kg), PDF._txt(c.origem),
+                                   Paragraph(PDF._txt(c.fonte), e['Normal'])])
+                itens.append(Paragraph("Composição global do veículo (fonte agregada)", e['Heading3']))
+                itens.append(Table(linhas, colWidths=[140, 60, 70, 230], style=estilo_tab))
+                itens.append(Spacer(1, 8))
+                itens.append(Paragraph("Composição por peça não se aplica: o inventário traz a massa de cada peça, "
+                                       "mas não a distribuição dos materiais dentro dela.", e['Normal']))
+                itens.append(Spacer(1, 8))
+                linhas = [["Peça", "Peso (kg)", "Origem massa"]]
+                for p in v.pecas:
+                    if p.removido_em is None:
+                        linhas.append([Paragraph(PDF._txt(p.Categoria), e['Normal']), PDF._txt(p.Peso),
+                                       PDF._txt(p.massa_origem)])
+                itens.append(Table(linhas, colWidths=[260, 70, 120], style=estilo_tab))
+            else:
+                linhas = [["Peça", "Peso (kg)", "Origem massa", "Composição (cobertura)", "Materiais"]]
+                for p in v.pecas:
+                    if p.removido_em is not None:
+                        continue
+                    ind = Inventario.IndicadoresPeca(p, catalogo)
+                    linhas.append([Paragraph(PDF._txt(p.Categoria), e['Normal']), PDF._txt(p.Peso),
+                                   PDF._txt(p.massa_origem), PDF._indicadores_texto(ind),
+                                   PDF._composicao(p, catalogo, e['Normal'])])
+                itens.append(Table(linhas, colWidths=[75, 45, 60, 75, 245], style=estilo_tab))
+            itens.append(Spacer(1, 8))
+            itens.append(Paragraph("Destinação: os percentuais por material e as distâncias da página Cálculos são "
+                                   "parâmetros simulados do modelo demonstrativo. Nenhuma destinação efetiva "
+                                   "(real) está registrada para este veículo.", e['Normal']))
 
         SimpleDocTemplate(buf, pagesize=A4).build(itens)
         buf.seek(0)

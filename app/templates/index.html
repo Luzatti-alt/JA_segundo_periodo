@@ -4,52 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Software pegada de carbono</title>
-    <link rel="stylesheet" href="../static/styles/index.css">
     <link rel="stylesheet" href="../static/styles/base.css">
+    <link rel="stylesheet" href="../static/styles/index.css">
     <script src="../static/scripts/Comum.js" defer></script>
     <script src="../static/scripts/index.js" defer></script>
 </head>
 <body>
-    <header>
-        <div class="home">
-            <h1>Pegada+</h1><!--nome placehoarder-->
-        </div>
-        <nav>
-            <a href="{{url_for('Home')}}">Início</a>
-            <a href="{{url_for('Dados')}}" aria-current="page">Dados</a>
-            <a href="{{url_for('QRLista')}}" aria-current="page">QRs</a>
-            <a href="{{url_for('CatalogoPagina')}}">Catálogo</a>
-            <a href="{{url_for('InventarioPagina')}}">Inventário</a>
-            <a href="{{url_for('Calculos')}}" aria-current="page">Calculos</a>
-        </nav>
-    </header>
+    {% include 'cabecalho.html' %}
     <main>
         <!--talvez uma dashboard de emissões ou algo assim(ou algumas em um carrosel)-->
-        <h1>Controle de dados modelo veiculo</h1>
-        <div class="VeiculoModelo">
-            <button data-acao="adicionar" data-entidade="VeiculoModelo">Adicionar veículo ao banco de dados</button>
-            <button data-acao="editar" data-entidade="VeiculoModelo">Editar veículo do banco de dados</button>
-            <button data-acao="remover" data-entidade="VeiculoModelo">Remover veículo do banco de dados</button>
-            <a href="{{url_for('InventarioPagina')}}#modelo">Componentes de referência do modelo</a>
-        </div>
-        <h1>Controle de dados veiculo individual</h1>
-        <div class="Veiculo">
-            <button data-acao="adicionar" data-entidade="veiculo">Adicionar veículo ao banco de dados</button>
-            <button data-acao="editar" data-entidade="veiculo">Editar veículo do banco de dados</button>
-            <button data-acao="remover" data-entidade="veiculo">Remover veículo do banco de dados</button>
-            <a href="{{url_for('InventarioPagina')}}">Inventário e composição do veículo</a>
-        </div>
-        <h1>Controle de dados componentes</h1>
-        <div class="Componentes">
-            <button data-acao="adicionar" data-entidade="componentes">Adicionar componente ao banco de dados</button>
-            <button data-acao="editar" data-entidade="componentes">Editar componente do banco de dados</button>
-            <button data-acao="remover" data-entidade="componentes">Remover componente do banco de dados</button>
-        </div>
-        <h1>Controle de dados materiais</h1>
-        <div class="Material">
-            <button data-acao="adicionar" data-entidade="materiais">Adicionar material ao banco de dados</button>
-            <button data-acao="editar" data-entidade="materiais">Editar material do banco de dados</button>
-            <button data-acao="remover" data-entidade="materiais">Remover material do banco de dados</button>
+        <h1>Cadastros</h1>
+        <div class="GradeCadastros">
+            <section class="Painel VeiculoModelo" aria-labelledby="tModelo">
+                <h2 id="tModelo">Modelos de veículo</h2>
+                <p class="Nota">Base reutilizável: massa, categoria e inventário de referência.</p>
+                <div class="GrupoAcoes">
+                    <button data-acao="adicionar" data-entidade="VeiculoModelo" aria-label="Adicionar modelo de veículo">Adicionar</button>
+                    <button data-acao="editar" data-entidade="VeiculoModelo" aria-label="Editar modelo de veículo">Editar</button>
+                    <button data-acao="remover" data-entidade="VeiculoModelo" aria-label="Remover modelo de veículo">Remover</button>
+                </div>
+                <a class="BotaoLink" href="{{url_for('InventarioPagina')}}#modelo">Componentes de referência do modelo</a>
+            </section>
+
+            <section class="Painel Veiculo" aria-labelledby="tVeiculo">
+                <h2 id="tVeiculo">Veículos individuais</h2>
+                <p class="Nota">Cada veículo parte de um modelo base e guarda chassi, estado e origem dos dados.</p>
+                <div class="GrupoAcoes">
+                    <button data-acao="adicionar" data-entidade="veiculo" aria-label="Adicionar veículo">Adicionar</button>
+                    <button data-acao="editar" data-entidade="veiculo" aria-label="Editar veículo">Editar</button>
+                    <button data-acao="remover" data-entidade="veiculo" aria-label="Remover veículo">Remover</button>
+                </div>
+                <a class="BotaoLink" href="{{url_for('InventarioPagina')}}">Inventário e composição do veículo</a>
+            </section>
+
+            <section class="Painel Componentes" aria-labelledby="tComponentes">
+                <h2 id="tComponentes">Componentes</h2>
+                <p class="Nota">Peças de um veículo, com massa e origem da massa.</p>
+                <div class="GrupoAcoes">
+                    <button data-acao="adicionar" data-entidade="componentes" aria-label="Adicionar componente">Adicionar</button>
+                    <button data-acao="editar" data-entidade="componentes" aria-label="Editar componente">Editar</button>
+                    <button data-acao="remover" data-entidade="componentes" aria-label="Remover componente">Remover</button>
+                </div>
+            </section>
+
+            <section class="Painel Material" aria-labelledby="tMateriais">
+                <h2 id="tMateriais">Materiais</h2>
+                <p class="Nota">Lotes físicos de material ligados a uma peça.</p>
+                <div class="GrupoAcoes">
+                    <button data-acao="adicionar" data-entidade="materiais" aria-label="Adicionar material">Adicionar</button>
+                    <button data-acao="editar" data-entidade="materiais" aria-label="Editar material">Editar</button>
+                    <button data-acao="remover" data-entidade="materiais" aria-label="Remover material">Remover</button>
+                </div>
+            </section>
         </div>
     </main>
 
@@ -68,7 +74,6 @@
                     <select id="seletorRegistro"></select>
                 </label>
 
-                <!-- Os names dos campos são iguais às chaves do JSON da API -->
                 <!-- Os names dos campos são iguais às chaves do JSON da API -->
                 <fieldset class="ModalVeiculoModelo" data-entidade="VeiculoModelo" hidden disabled>
                     <label>Marca

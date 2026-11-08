@@ -3,48 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../static/styles/QR.css">
     <link rel="stylesheet" href="../static/styles/base.css">
+    <link rel="stylesheet" href="../static/styles/QR.css">
     <title>QR gerado</title>
     <script src="../static/scripts/QRBusca.js" defer></script>
 </head>
 <body>
-    <header>
-        <div class="home">
-            <h1>Pegada+</h1><!--nome placehoarder-->
-        </div>
-        <nav>
-            <a href="{{url_for('Home')}}">Início</a>
-            <a href="{{url_for('Dados')}}" aria-current="page">Dados</a>
-            <a href="{{url_for('QRLista')}}" aria-current="page">QRs</a>
-            <a href="{{url_for('CatalogoPagina')}}">Catálogo</a>
-            <a href="{{url_for('InventarioPagina')}}">Inventário</a>
-            <a href="{{url_for('Calculos')}}" aria-current="page">Calculos</a>
-        </nav>
-    </header>
-    <div class="controle">
-            <h1>Controle QR</h1>
-            <div class="controleQR">
-                <form id="qrFiltro" method="get" action="{{ url_for('QRLista') }}" class="QRFiltro">
-                    <input type="search" name="q" value="{{ request.args.get('q', '') }}"
-                           placeholder="Buscar por chassi, modelo, ano, #id..." autocomplete="off">
-                    <select name="estado">
-                        <option value="">Todos os estados</option>
-                        {% for e in filtros.estados %}<option value="{{ e }}" {{ 'selected' if request.args.get('estado') == e }}>{{ e }}</option>{% endfor %}
-                    </select>
-                    <select name="ano">
-                        <option value="">Todos os anos</option>
-                        {% for a in filtros.anos %}<option value="{{ a }}" {{ 'selected' if request.args.get('ano') == a|string }}>{{ a }}</option>{% endfor %}
-                    </select>
-                    <select name="categoria">
-                        <option value="">Todas as categorias</option>
-                        {% for c in filtros.categorias %}<option value="{{ c }}" {{ 'selected' if request.args.get('categoria') == c }}>{{ c }}</option>{% endfor %}
-                    </select>
-                    <noscript><button type="submit">Filtrar</button></noscript>
-                </form>
-            </div>
-        </div>
-    <div id="listaQR">
+    {% include 'cabecalho.html' %}
+    <main>
+        <h1>Controle QR</h1>
+        <form id="qrFiltro" method="get" action="{{ url_for('QRLista') }}" class="Filtros">
+            <input type="search" name="q" value="{{ request.args.get('q', '') }}"
+                   placeholder="Buscar por chassi, modelo, ano, #id..." autocomplete="off">
+            <select name="estado">
+                <option value="">Todos os estados</option>
+                {% for e in filtros.estados %}<option value="{{ e }}" {{ 'selected' if request.args.get('estado') == e }}>{{ e }}</option>{% endfor %}
+            </select>
+            <select name="ano">
+                <option value="">Todos os anos</option>
+                {% for a in filtros.anos %}<option value="{{ a }}" {{ 'selected' if request.args.get('ano') == a|string }}>{{ a }}</option>{% endfor %}
+            </select>
+            <select name="categoria">
+                <option value="">Todas as categorias</option>
+                {% for c in filtros.categorias %}<option value="{{ c }}" {{ 'selected' if request.args.get('categoria') == c }}>{{ c }}</option>{% endfor %}
+            </select>
+            <noscript><button type="submit">Filtrar</button></noscript>
+        </form>
+        <div id="listaQR">
             {% for qr in qrs %}
             {% set v = qr.veiculo %}
             <article class="QRCartao">
@@ -53,13 +38,14 @@
                 {% if v %}<small>{{ v.Chassi }} · {{ v.Ano }} · {{ v.Estado }}</small>
                 {% elif qr.data %}<small>{{ qr.data }}</small>{% endif %}
                 <div class="QRAcoes">
-                    <a href="{{ url_for('QRImagem', qr_id=qr.id, baixar=1) }}">Baixar QR (PNG)</a>
-                    <a href="{{ url_for('DownloadPDF', qr_id=qr.id) }}">Baixar PDF</a>
+                    <a class="BotaoLink" href="{{ url_for('QRImagem', qr_id=qr.id, baixar=1) }}">Baixar QR (PNG)</a>
+                    <a class="BotaoLink" href="{{ url_for('DownloadPDF', qr_id=qr.id) }}">Baixar PDF</a>
                 </div>
             </article>
             {% else %}
             <p>Nenhum QR encontrado.</p>
             {% endfor %}
         </div>
+    </main>
 </body>
 </html>

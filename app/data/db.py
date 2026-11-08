@@ -360,8 +360,9 @@ def ResolverMaterial(s, nome, criar=True):
         return a.material
     return NovoMaterial(s, nome) if criar else None
 
-# materiais conhecidos que o PDF não agrupa (vêm dos exemplos). Sem grupo = "não classificado" de propósito.
-MATERIAIS_EXTRA = [("Lítio", None), ("Cobalto", None), ("Níquel", None), ("Tecido", None),
+# materiais extras: "Fluidos" (grupo do PDF, seção 4) e os dos exemplos que o PDF não agrupa.
+# Sem grupo = "não classificado" de propósito.
+MATERIAIS_EXTRA = [("Fluidos", "Fluidos"), ("Lítio", None), ("Cobalto", None), ("Níquel", None), ("Tecido", None),
                    ("Líquido de arrefecimento", "Fluidos"), ("Fluido de freio", "Fluidos")]
 
 def SeedCatalogo():

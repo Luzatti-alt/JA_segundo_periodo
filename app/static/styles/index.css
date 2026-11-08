@@ -1,138 +1,94 @@
-
-[hidden]{
-    display: none !important;
-}/* começa com modal escondido*/
-.VeiculoModelo, .Veiculo, .Componentes, .Material, .QRS{
+.GradeCadastros {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: 1.25rem;
+}
+.GradeCadastros .Painel {
+    margin-bottom: 0;
     display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 2vh;
-    gap: 2vw;
+    flex-direction: column;
+    gap: .75rem;
 }
-button{
-    color: white;
-    width: 240px;
-    height: 56px;
-    background-color: #1c1c1c;
-    padding: 5px;
-    margin-top: 2vh;
-    border-radius: 10px;
-    border-style: groove;
-    text-align: center;
-    cursor: pointer;
+.GradeCadastros .Painel p {
+    margin: 0;
+}
+.GrupoAcoes { display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+.GradeCadastros .BotaoLink {
+    align-self: flex-start;
+    margin-top: auto;
 }
 
-button:hover{
-    background-color: #274a19;/*trocar cor dps*/
-}
-
-/* ---------- Modal ---------- */
-.modal{
+.modal {
     position: fixed;
     inset: 0;
     z-index: 100;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 16px;
-    background-color: rgba(0, 0, 0, 0.75);
+    padding: 1rem;
+    background: rgba(0, 0, 0, .72);
 }
-.Modal_Conteudo{
-    width: min(480px, 100%);
+.Modal_Conteudo {
+    width: min(620px, 100%);
     max-height: 90vh;
     overflow-y: auto;
-    padding: 20px;
-    color: white;
-    background-color: #1c1c1c;
-    border: 1px solid #4a4a4a;
+    padding: 1.25rem;
+    background: var(--superficie);
+    border: 1px solid var(--borda);
     border-radius: 12px;
 }
-.ModalCabecalho{
+.ModalCabecalho {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 1rem;
 }
-.ModalCabecalho h2{
-    color: white;
-    font-size: 1.25rem;
+.ModalCabecalho h2 {
+    margin: 0;
 }
-.ModalSeletor,
-.Modal_Conteudo fieldset label{
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 12px;
-    color: white;
-    font-size: 0.9rem;
-}
-.Modal_Conteudo fieldset{
-    border: 0;
-    min-width: 0;
-}
-.Modal_Conteudo input,
-.Modal_Conteudo select{
-    padding: 8px;
-    color: white;
-    background-color: #2b2b2b;
-    border: 1px solid #6a6a6a;
-    border-radius: 6px;
-    font-size: 1rem;
-}
-.Modal_Conteudo input:focus-visible,
-.Modal_Conteudo select:focus-visible,
-.Modal_Conteudo button:focus-visible{
-    outline: 2px solid aqua;
-    outline-offset: 2px;
-}
-.Modal_Conteudo input:disabled,
-.Modal_Conteudo select:disabled{
-    opacity: 0.65;
-    cursor: not-allowed;
-}
-.ModalMensagem{
-    min-height: 1.2em;
-    margin-bottom: 12px;
-    font-size: 0.9rem;
-}
-.ModalMensagem.ok{
-    color: #7be08a;
-}
-.ModalMensagem.erro{
-    color: #ff8f8f;
-}
-.ModalAcoes{
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-}
-/* sobrescreve o tamanho fixo dos botões da página só dentro do modal */
-.Modal_Conteudo button{
-    width: auto;
-    height: auto;
-    margin-top: 0;
-    padding: 8px 16px;
-}
-.Modal_Conteudo .ModalFechar{
-    padding: 0 10px;
+.Modal_Conteudo .ModalFechar {
+    padding: 0 .7rem;
     font-size: 1.5rem;
     line-height: 1.6;
+    background: transparent;
+    border-color: transparent;
 }
-.Modal_Conteudo .BtnConfirmar{
-    background-color: greenyellow;
+.Modal_Conteudo .ModalFechar:hover {
+    background: var(--superficie-2);
 }
-.Modal_Conteudo .BtnConfirmar:hover{
-    background-color: rgb(73, 109, 19);
+.ModalSeletor {
+    margin-bottom: 1rem;
 }
-.Modal_Conteudo .BtnConfirmar:disabled{
-    opacity: 0.6;
+.Modal_Conteudo fieldset {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: .8rem 1rem;
+    min-width: 0;
+    margin: 0 0 .75rem;
+    padding: 0;
+    border: 0;
+}
+.Modal_Conteudo fieldset > :is(p, label:has(> input[type="checkbox"])) {
+    grid-column: 1 / -1;
+}
+.Modal_Conteudo fieldset:disabled input,
+.Modal_Conteudo fieldset:disabled select {
+    opacity: .75;
+}
+.ModalVeiculoBase {
+    margin: 0;
+}
+.modal[data-acao="remover"] .BtnConfirmar {
+    background: var(--perigo-fundo);
+    border-color: var(--perigo-fundo);
+}
+.modal[data-acao="remover"] .BtnConfirmar:hover {
+    background: var(--perigo-fundo-hover);
+    border-color: var(--perigo-fundo-hover);
+}
+.BtnConfirmar:disabled {
     cursor: wait;
-}
-.modal[data-acao="remover"] .BtnConfirmar{
-    color: white;
-    background-color: #c0392b;
-}
-.modal[data-acao="remover"] .BtnConfirmar:hover{
-    background-color: #e04b3a;
 }

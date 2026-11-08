@@ -1,29 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../static/styles/base.css">
     <link rel="stylesheet" href="../static/styles/Calculos.css">
     <script src="../static/scripts/Calculos.js" defer></script>
-    <title>Calculos</title>
+    <title>Cálculos</title>
 </head>
 <body>
-    <header>
-        <div class="home">
-            <h1>Pegada+</h1>
-        </div>
-        <nav>
-            <a href="{{url_for('Home')}}">Início</a>
-            <a href="{{url_for('Dados')}}" aria-current="page">Dados</a>
-            <a href="{{url_for('QRLista')}}" aria-current="page">QRs</a>
-            <a href="{{url_for('CatalogoPagina')}}">Catálogo</a>
-            <a href="{{url_for('InventarioPagina')}}">Inventário</a>
-            <a href="{{url_for('Calculos')}}" aria-current="page">Calculos</a>
-        </nav>
-    </header>
+    {% include 'cabecalho.html' %}
     <main>
-        <section class="CalcControle">
+        <section class="CalcControle Painel">
             <h2>Pegada de carbono no fim de vida</h2>
             <label>Veículo
                 <select id="calcVeiculo"></select>
@@ -33,7 +21,7 @@
         <p class="Aviso" id="calcErro" hidden></p>
 
         <div id="calcResultado" hidden>
-            <section id="calcQualidade">
+            <section class="Painel" id="calcQualidade">
                 <p id="calcBanner"></p>
                 <ul id="calcMotivos"></ul>
                 <div class="Tabela"><table id="tabQualidade"></table></div>
@@ -41,43 +29,43 @@
             </section>
             <section class="CalcResumo" id="calcResumo"></section>
 
-            <section>
+            <section class="Painel">
                 <h2>Emissões brutas por etapa</h2>
                 <div class="Tabela"><table id="tabEtapas"></table></div>
             </section>
-            <section>
+            <section class="Painel">
                 <h2>Reciclagem por material</h2>
                 <div class="Tabela"><table id="tabReciclagem"></table></div>
             </section>
-            <section>
+            <section class="Painel">
                 <h2>Destino da massa</h2>
                 <div class="Tabela"><table id="tabDestinoMassa"></table></div>
             </section>
-            <section>
+            <section class="Painel">
                 <h2>Benefício potencial de substituição</h2>
                 <div class="Tabela"><table id="tabBeneficio"></table></div>
                 <p class="Nota">Indicador comparativo e hipotético. Não representa carbono removido da atmosfera,
                     e o saldo não deve ser apresentado como "pegada negativa".</p>
             </section>
-            <section>
+            <section class="Painel">
                 <h2>Comparação de cenários</h2>
                 <div class="Tabela"><table id="tabCenarios"></table></div>
             </section>
-            <section>
+            <section class="Painel">
                 <h2>Análise de sensibilidade</h2>
                 <div class="Tabela"><table id="tabSensibilidade"></table></div>
             </section>
-            <section>
+            <section class="Painel">
                 <h2>Lista de atenção</h2>
                 <div class="Tabela"><table id="tabAtencao"></table></div>
             </section>
-            <section>
+            <section class="Painel">
                 <h2>Avisos</h2>
                 <ul id="listaAvisos"></ul>
             </section>
         </div>
 
-        <section class="CalcParametros">
+        <section class="CalcParametros Painel">
             <h2>Parâmetros do modelo</h2>
             <p class="Nota">Os valores iniciais são hipotéticos (PDF de apoio). Troque pelos dados reais e a origem de cada fator.</p>
             <details>
