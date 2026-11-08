@@ -1,0 +1,22 @@
+tags:
+  - Catálogo
+summary: "Lista o catálogo de materiais"
+parameters:
+  - name: status
+    in: query
+    required: false
+    type: string
+    description: "classificado | nao_classificado | outros_declarado"
+  - name: ativo
+    in: query
+    required: false
+    type: string
+    description: "0 ou 1"
+  - name: q
+    in: query
+    required: false
+    type: string
+    description: "busca por nome ou alias"
+responses:
+  200:
+    description: "Lista de materiais com aliases e grupos por esquema"

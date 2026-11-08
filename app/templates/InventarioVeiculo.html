@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventário e composição</title>
+    <link rel="stylesheet" href="../static/styles/Data.css">
+    <link rel="stylesheet" href="../static/styles/base.css">
+    <script src="../static/scripts/Comum.js" defer></script>
+    <script src="../static/scripts/InventarioVeiculo.js" defer></script>
+</head>
+<body>
+    <header>
+        <div class="home">
+            <h1>Pegada+</h1><!--nome placehoarder-->
+        </div>
+        <nav>
+            <a href="{{url_for('Home')}}">Início</a>
+            <a href="{{url_for('Dados')}}">Dados</a>
+            <a href="{{url_for('QRLista')}}">QRs</a>
+            <a href="{{url_for('CatalogoPagina')}}">Catálogo</a>
+            <a href="{{url_for('InventarioPagina')}}" aria-current="page">Inventário</a>
+            <a href="{{url_for('Calculos')}}">Calculos</a>
+        </nav>
+    </header>
+    <main>
+        <!-- ============ veículo individual ============ -->
+        <section id="veiculo">
+            <h1>Inventário do veículo</h1>
+            <label>Veículo
+                <select id="invVeiculo"></select>
+            </label>
+            <label>Fonte da composição
+                <select id="invFonte" disabled>
+                    <option value="por_peca">Por peça (JSON em cada componente)</option>
+                    <option value="agregada">Agregada (composição global do veículo)</option>
+                </select>
+            </label>
+            <p class="Nota">Só uma fonte vale por vez: assim a mesma massa nunca é contada duas vezes.</p>
+            <p class="Aviso" id="invErro" hidden></p>
+
+            <div id="invConteudo" hidden>
+                <p id="invBanner"><strong></strong></p>
+                <ul id="invMotivos"></ul>
+                <div class="Tabela"><table id="tabInvResumo"></table></div>
+                <ul id="invAlertas"></ul>
+
+                <h2>Peças</h2>
+                <div class="Tabela"><table id="tabInvPecas"></table></div>
+                <button type="button" id="btnNovaPeca">Novo componente</button>
+                <a id="linkCalculo" href="#">Calcular este veículo</a>
+            </div>
+        </section>
+
+        <section id="peca" hidden>
+            <h2 id="pecaTitulo"></h2>
+            <p class="Nota" id="pecaNotaFonte" hidden>A fonte deste veículo é "agregada": a composição por peça é ignorada
+                nos indicadores e no cálculo.</p>
+            <form id="pecaForm">
+                <label>Categoria
+                    <input name="categoria" required placeholder="Motor, bateria, pneus...">
+                </label>
+                <label>Massa da peça (kg)
+                    <input type="number" name="peso_kg" min="0" step="any">
+                </label>
+                <label>Origem da massa
+                    <select name="massa_origem">
+                        <option value="nao_informado">não informada</option>
+                        <option value="referencia">referência (copiada do modelo)</option>
+                        <option value="medido">medido</option>
+                        <option value="estimado">estimado</option>
+                        <option value="fornecedor">fornecedor</option>
+                    </select>
+                </label>
+                <label>Código da peça
+                    <input name="codigo_peca" maxlength="60">
+                </label>
+                <label>Fornecedor
+                    <input name="fornecedor" maxlength="100">
+                </label>
+                <h3>Composição</h3>
+                <div id="pecaComposicao"></div>
+                <div class="ModalAcoes">
+                    <button type="submit">Salvar</button>
+                    <button type="button" id="btnRemoverPeca" hidden>Remover componente</button>
+                    <button type="button" id="btnFecharPeca">Fechar</button>
+                </div>
+                <p class="ModalMensagem" id="pecaMensagem" role="status"></p>
+                <ul id="pecaAlertas"></ul>
+            </form>
+        </section>
+
+        <!-- ============ inventário-base do modelo ============ -->
+        <section id="modelo">
+            <h1>Inventário-base por modelo</h1>
+            <p class="Nota">Valores de <b>referência</b>: ao criar um veículo com "copiar inventário", eles são copiados
+                como referência (não como medidos) e devem ser confirmados ou trocados na inspeção.</p>
+            <label>Modelo
+                <select id="modModelo"></select>
+            </label>
+            <p class="Aviso" id="modErro" hidden></p>
+            <div id="modConteudo" hidden>
+                <div class="Tabela"><table id="tabModComp"></table></div>
+                <button type="button" id="btnNovoModComp">Novo componente de referência</button>
+            </div>
+        </section>
+
+        <section id="modComp" hidden>
+            <h2 id="modCompTitulo"></h2>
+            <form id="modCompForm">
+                <label>Categoria
+                    <input name="categoria" required>
+                </label>
+                <label>Massa de referência (kg)
+                    <input type="number" name="massa_ref_kg" min="0" step="any">
+                </label>
+                <label>Código da peça
+                    <input name="codigo_peca" maxlength="60">
+                </label>
+                <label>Fornecedor
+                    <input name="fornecedor" maxlength="100">
+                </label>
+                <h3>Composição padrão (se conhecida)</h3>
+                <div id="modCompComposicao"></div>
+                <div class="ModalAcoes">
+                    <button type="submit">Salvar</button>
+                    <button type="button" id="btnRemoverModComp" hidden>Remover</button>
+                    <button type="button" id="btnFecharModComp">Fechar</button>
+                </div>
+                <p class="ModalMensagem" id="modCompMensagem" role="status"></p>
+                <ul id="modCompAlertas"></ul>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

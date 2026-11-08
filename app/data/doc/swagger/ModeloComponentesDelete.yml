@@ -1,0 +1,14 @@
+tags:
+  - Modelos
+summary: "Remove componente de referência (peças já copiadas permanecem)"
+parameters:
+  - name: comp_id
+    in: path
+    required: true
+    type: integer
+    description: "id do componente do modelo"
+responses:
+  204:
+    description: "Removido"
+  404:
+    description: "Não encontrado"

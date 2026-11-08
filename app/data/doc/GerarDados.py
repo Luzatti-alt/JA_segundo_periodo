@@ -3,13 +3,15 @@ import socket
 from datetime import datetime
 from functools import lru_cache
 from io import BytesIO
+from xml.sax.saxutils import escape
 
 import qrcode
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table
 
-from app.data.db import session, Session, QRFiles
+from app.data.db import Session, QRFiles, LinkTemporario
+from app.services import Inventario
 
 PASTA_QRS = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'temp')
 
@@ -37,7 +39,7 @@ def IpLocal():
 
 @lru_cache(maxsize=512)
 def PngBytes(link: str) -> bytes:
-    #PNG do QR gerado em memória. O cache evita refazer o mesmo link (alguns KB cada)."""
+    #PNG do QR gerado em memória. O cache evita refazer o mesmo link (alguns KB cada).#
     qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L,
                        box_size=10, border=4)
     qr.add_data(link)
@@ -50,69 +52,149 @@ def PngBytes(link: str) -> bytes:
 class QR:
     @staticmethod
     def BaseUrl(host=None) -> str:
+        fixa = os.environ.get("QR_BASE_URL", "").strip()
+        if fixa:
+            return fixa.rstrip("/")
         if not host or host.startswith(("127.0.0.1", "localhost")):
-            host = f"{IpLocal()}:5000"
+            host = f"{IpLocal()}:{os.environ.get('QR_PORT', '5000')}"
         return f"http://{host}"
 
     @staticmethod
-    def Png(base_url: str, qr_id: int) -> BytesIO:
-       #QR sob demanda(nada é gravado em disco)
-        return BytesIO(PngBytes(f"{base_url}/download/{qr_id}"))
+    def Link(base_url: str, codigo: str) -> str:
+        #O QR carrega o codigo PERMANENTE (uuid), não o id sequencial nem um link temporário.#
+        return f"{base_url}/q/{codigo}"
+
+    @staticmethod
+    def Png(base_url: str, codigo: str) -> BytesIO:
+        # QR sob demanda (nada é gravado em disco)
+        return BytesIO(PngBytes(QR.Link(base_url, codigo)))
 
     @staticmethod
     def Gerar(base_url=None, data: str = '', veiculo_id=None, peca_id=None, material_id=None):
-       #base_url é ignorado (mantido para não quebrar quem já chama). Só cria o registro; a imagem é montada quando alguém pede /QR/<id>/imagem
-        registro = QRFiles(path='', data=data, veiculo_id=veiculo_id,
-                           peca_id=peca_id, material_id=material_id)
-        session.add(registro)
-        session.commit()
-        return registro.id
+        # base_url é ignorado (mantido para não quebrar quem já chama). Só cria o registro permanente;
+        # a imagem é montada quando alguém pede /QR/<id>/imagem. ExpiraEm fica vazio (QR não expira).
+        with Session() as s:
+            registro = QRFiles(path='', data=data, veiculo_id=veiculo_id, peca_id=peca_id,
+                               material_id=material_id, ExpiraEm=None)
+            s.add(registro)
+            s.commit()
+            return registro.id
 
     @staticmethod
     def RegerarTodos(base_url=None, limpar_expirados=True):
-       #Mantida por compatibilidade: limpa expirados, apaga PNGs antigos de temp/ e zera o cache.
+        #Zera o cache de imagens e apaga LINKS TEMPORÁRIOS vencidos. NUNCA apaga QRs.#
         removidos = PDF.ApagarExpirados() if limpar_expirados else 0
         if os.path.isdir(PASTA_QRS):
             for nome in os.listdir(PASTA_QRS):
                 if nome.lower().endswith(".png"):
                     os.remove(os.path.join(PASTA_QRS, nome))
         PngBytes.cache_clear()
-        total = session.query(QRFiles).update({QRFiles.path: ''})
-        session.commit()
-        print(f"QRs cadastrados: {total} | expirados removidos: {removidos}")
+        with Session() as s:
+            total = s.query(QRFiles).count()
+        print(f"QRs cadastrados: {total} | links temporários vencidos removidos: {removidos}")
         print(f"Base URL dos QRs: {base_url or QR.BaseUrl()}")
         return total
 
     @staticmethod
-    def QrLido(qr_id: int):
+    def QrLido(qr_id: int = None, codigo: str = None):
+        #PDF do que o QR identifica. Aceita o id (links antigos) ou o codigo permanente.#
         with Session() as s:
-            registro = s.get(QRFiles, qr_id)
-            if registro is None:
+            q = s.query(QRFiles)
+            registro = q.filter(QRFiles.codigo == codigo).first() if codigo else s.get(QRFiles, qr_id)
+            if registro is None or registro.ativo is False:
                 return None
-            return PDF.GerarPdf(registro)   
+            return PDF.GerarPdf(registro, s)
 
 
 class PDF:
-    @staticmethod
-    def GerarPdf(registro):
-        buf = BytesIO()
-        estilos = getSampleStyleSheet()
-        itens = [Paragraph(f"Relatório QR #{registro.id}", estilos['Title']),
-                 Paragraph(str(registro.data or "Sem dados"), estilos['Normal']),
-                 Spacer(1, 12)]
+    ROTULO_ORIGEM = {"exemplo": "DADOS DE EXEMPLO (demonstrativo)",
+                     "referencia_pdf": "CENÁRIO HIPOTÉTICO DE REFERÊNCIA (PDF) - não são dados medidos",
+                     "nao_informado": "Origem dos dados não informada"}
 
-        v = registro.veiculo
+    @staticmethod
+    def _txt(x):
+        return escape(str(x)) if x not in (None, "") else "-"
+
+    @staticmethod
+    def _composicao(p, catalogo, estilo):
+        itens = p.composicao
+        if itens is None:
+            return Paragraph("<i>composição não informada</i>", estilo)
+        if not itens:
+            return Paragraph("<i>composição vazia</i>", estilo)
+        partes = []
+        for i in itens:
+            nome = i.get("categoria") or "não identificado"
+            marca = ""
+            if i.get("material_id") in catalogo and catalogo[i["material_id"]][1] == "nao_classificado":
+                marca = " [sem classificação]"
+            partes.append(f"{escape(nome)} ({i.get('massa_kg', 0):g} kg){marca}")
+        return Paragraph(", ".join(partes), estilo)
+
+    @staticmethod
+    def _indicadores_texto(ind):
+        if ind["cobertura_pct"] is None:
+            return ind["estado"]
+        return f"{ind['estado']} ({ind['cobertura_pct']:g}%)"
+
+    @staticmethod
+    def GerarPdf(registro, s):
+        buf = BytesIO()
+        e = getSampleStyleSheet()
+        catalogo = Inventario.StatusCatalogo(s)
+        itens = [Paragraph(f"Relatório QR #{registro.id}", e['Title']),
+                 Paragraph(f"Código permanente: {registro.codigo}", e['Normal']),
+                 Paragraph(PDF._txt(registro.data) if registro.data else "Sem dados", e['Normal']),
+                 Spacer(1, 12)]
+        estilo_tab = [('GRID', (0, 0), (-1, -1), 0.5, '#888888'), ('BACKGROUND', (0, 0), (-1, 0), '#dddddd'),
+                      ('VALIGN', (0, 0), (-1, -1), 'TOP')]
+
+        mat = registro.materiais
+        peca = registro.pecas or (mat.pecas if mat else None)
+        v = registro.veiculo or (peca.veiculo if peca else None)
+
         if v:
+            if v.removido_em:
+                itens.append(Paragraph(f"<b>REGISTRO REMOVIDO em {v.removido_em:%d/%m/%Y %H:%M}</b>", e['Normal']))
+            rotulo = PDF.ROTULO_ORIGEM.get(v.origem_dados)
+            if rotulo:
+                itens.append(Paragraph(f"<b>{rotulo}</b>", e['Normal']))
+            itens.append(Paragraph(f"{PDF._txt(v.veiculo)} {PDF._txt(v.Modelo)} ({PDF._txt(v.Ano)}) - "
+                                   f"{PDF._txt(v.MassaTotal)} kg - {PDF._txt(v.Estado)} - "
+                                   f"chassi {PDF._txt(v.Chassi)}", e['Heading3']))
+
+        if mat is not None:                                   # QR de lote de material
+            itens.append(Paragraph(f"Material (lote #{mat.id}): {PDF._txt(mat.Categoria)} - {mat.Peso} kg", e['Heading3']))
+        if peca is not None and registro.veiculo_id is None:   # QR de peça (ou lote dela)
+            ind = Inventario.IndicadoresPeca(peca, catalogo)
+            itens.append(Paragraph(f"Peça #{peca.id}: {PDF._txt(peca.Categoria)} - {PDF._txt(peca.Peso)} kg "
+                                   f"(origem da massa: {PDF._txt(peca.massa_origem)})", e['Heading3']))
+            itens.append(Paragraph(f"Código: {PDF._txt(peca.codigo_peca)} | Fornecedor: {PDF._txt(peca.fornecedor)}",
+                                   e['Normal']))
+            itens.append(Paragraph(f"Composição: {PDF._indicadores_texto(ind)} - identificada "
+                                   f"{ind['massa_identificada_kg']} kg, não identificada "
+                                   f"{ind['massa_nao_identificada_kg']} kg", e['Normal']))
+            itens.append(PDF._composicao(peca, catalogo, e['Normal']))
+            for a in ind["alertas"]:
+                itens.append(Paragraph(f"Atenção: {escape(a)}", e['Normal']))
+        elif v is not None and registro.veiculo_id is not None:  # QR de veículo
+            inv = Inventario.IndicadoresVeiculo(s, v)
             itens.append(Paragraph(
-                f"{v.veiculo} {v.Modelo} ({v.Ano}) - {v.MassaTotal} kg - {v.Estado}",
-                estilos['Heading3']))
-            linhas = [["Peça", "Peso (kg)", "Materiais"]]
+                "Composição do veículo: " + ("COMPLETA" if inv["resultado_integral"] else "INCOMPLETA - resultados parciais")
+                + f" | cobertura {inv['cobertura_pct'] if inv['cobertura_pct'] is not None else '-'}% "
+                  f"(fonte: {inv['fonte_composicao']})", e['Normal']))
+            for m in inv["motivos_parcial"]:
+                itens.append(Paragraph(f"- {escape(m)}", e['Normal']))
+            itens.append(Spacer(1, 8))
+            linhas = [["Peça", "Peso (kg)", "Origem massa", "Composição (cobertura)", "Materiais"]]
             for p in v.pecas:
-                mats = ", ".join(f"{m.Categoria} ({m.Peso} kg)" for m in p.materiais)
-                linhas.append([p.Categoria, str(p.Peso), Paragraph(mats, estilos['Normal'])])
-            itens.append(Table(linhas, colWidths=[90, 60, 340],
-                               style=[('GRID', (0, 0), (-1, -1), 0.5, '#888888'),
-                                      ('BACKGROUND', (0, 0), (-1, 0), '#dddddd')]))
+                if p.removido_em is not None:
+                    continue
+                ind = Inventario.IndicadoresPeca(p, catalogo)
+                linhas.append([Paragraph(PDF._txt(p.Categoria), e['Normal']), PDF._txt(p.Peso),
+                               PDF._txt(p.massa_origem), PDF._indicadores_texto(ind),
+                               PDF._composicao(p, catalogo, e['Normal'])])
+            itens.append(Table(linhas, colWidths=[75, 45, 60, 75, 245], style=estilo_tab))
 
         SimpleDocTemplate(buf, pagesize=A4).build(itens)
         buf.seek(0)
@@ -120,10 +202,8 @@ class PDF:
 
     @staticmethod
     def ApagarExpirados():
-        expirados = session.query(QRFiles).filter(QRFiles.ExpiraEm < datetime.now()).all()
-        for r in expirados:
-            if r.path and os.path.exists(r.path):
-                os.remove(r.path)
-            session.delete(r)
-        session.commit()
-        return len(expirados)
+        #Remove só LinkTemporario vencido. O QR é permanente e nunca é apagado por expiração.#
+        with Session() as s:
+            n = s.query(LinkTemporario).filter(LinkTemporario.ExpiraEm < datetime.now()).delete()
+            s.commit()
+            return n

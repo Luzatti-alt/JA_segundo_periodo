@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de materiais</title>
+    <link rel="stylesheet" href="../static/styles/Data.css">
+    <link rel="stylesheet" href="../static/styles/base.css">
+    <script src="../static/scripts/Comum.js" defer></script>
+    <script src="../static/scripts/Catalogo.js" defer></script>
+</head>
+<body>
+    <header>
+        <div class="home">
+            <h1>Pegada+</h1><!--nome placehoarder-->
+        </div>
+        <nav>
+            <a href="{{url_for('Home')}}">Início</a>
+            <a href="{{url_for('Dados')}}">Dados</a>
+            <a href="{{url_for('QRLista')}}">QRs</a>
+            <a href="{{url_for('CatalogoPagina')}}" aria-current="page">Catálogo</a>
+            <a href="{{url_for('InventarioPagina')}}">Inventário</a>
+            <a href="{{url_for('Calculos')}}">Calculos</a>
+        </nav>
+    </header>
+    <main>
+        <h1>Catálogo de materiais</h1>
+        <p class="Nota">Material novo entra aqui sem mexer no código. Material sem grupo fica como
+            <b>não classificado</b> (nunca vira "Outros" sozinho); "Outros" só quando declarado.</p>
+
+        <form id="catFiltro">
+            <input type="search" name="q" placeholder="Buscar por nome ou alias..." autocomplete="off">
+            <select name="status">
+                <option value="">Todos os status</option>
+                <option value="classificado">Classificado</option>
+                <option value="nao_classificado">Não classificado</option>
+                <option value="outros_declarado">Outros (declarado)</option>
+            </select>
+            <select name="ativo">
+                <option value="">Ativos e inativos</option>
+                <option value="1">Só ativos</option>
+                <option value="0">Só inativos</option>
+            </select>
+        </form>
+        <div class="Tabela"><table id="tabCatalogo"></table></div>
+        <p class="Aviso" id="catErro" hidden></p>
+
+        <section>
+            <h2 id="catTitulo">Novo material</h2>
+            <form id="catForm">
+                <label>Nome
+                    <input name="nome" required maxlength="80" placeholder="Lítio, Cobalto, Tecido...">
+                </label>
+                <label>Aliases (um por linha)
+                    <textarea name="aliases" rows="3" placeholder="Li&#10;Lithium"></textarea>
+                </label>
+                <label>Grupos de cálculo (um por linha, formato esquema=grupo)
+                    <textarea name="grupos" rows="3" placeholder="pdf_demo=Alumínio"></textarea>
+                </label>
+                <label>Status
+                    <select name="status">
+                        <option value="">Automático (segue os grupos)</option>
+                        <option value="classificado">Classificado</option>
+                        <option value="nao_classificado">Não classificado</option>
+                        <option value="outros_declarado">Outros (declarado)</option>
+                    </select>
+                </label>
+                <label>Unidade de referência
+                    <input name="unidade_ref" maxlength="20" placeholder="kg">
+                </label>
+                <label>Processos possíveis (separados por vírgula)
+                    <input name="processos" placeholder="reciclagem, reuso">
+                </label>
+                <label>Descrição
+                    <textarea name="descricao" rows="2"></textarea>
+                </label>
+                <label><input type="checkbox" name="ativo" checked> Ativo</label>
+
+                <p class="Nota" id="catUso"></p>
+                <div class="ModalAcoes">
+                    <button type="submit" id="btnSalvarCat">Salvar</button>
+                    <button type="button" id="btnNovoCat">Novo</button>
+                    <button type="button" id="btnExcluirCat" hidden>Excluir</button>
+                </div>
+                <p class="ModalMensagem" id="catMensagem" role="status"></p>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

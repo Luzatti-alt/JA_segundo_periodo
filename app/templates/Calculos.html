@@ -17,6 +17,8 @@
             <a href="{{url_for('Home')}}">Início</a>
             <a href="{{url_for('Dados')}}" aria-current="page">Dados</a>
             <a href="{{url_for('QRLista')}}" aria-current="page">QRs</a>
+            <a href="{{url_for('CatalogoPagina')}}">Catálogo</a>
+            <a href="{{url_for('InventarioPagina')}}">Inventário</a>
             <a href="{{url_for('Calculos')}}" aria-current="page">Calculos</a>
         </nav>
     </header>
@@ -31,6 +33,12 @@
         <p class="Aviso" id="calcErro" hidden></p>
 
         <div id="calcResultado" hidden>
+            <section id="calcQualidade">
+                <p id="calcBanner"></p>
+                <ul id="calcMotivos"></ul>
+                <div class="Tabela"><table id="tabQualidade"></table></div>
+                <p class="Nota"><a id="linkInventario" href="#">Ver inventário e composição deste veículo</a></p>
+            </section>
             <section class="CalcResumo" id="calcResumo"></section>
 
             <section>

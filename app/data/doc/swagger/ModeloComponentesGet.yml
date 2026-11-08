@@ -1,0 +1,14 @@
+tags:
+  - Modelos
+summary: "Componentes de referência de um modelo"
+parameters:
+  - name: modelo_id
+    in: path
+    required: true
+    type: integer
+    description: "id do modelo"
+responses:
+  200:
+    description: "Lista"
+  404:
+    description: "Não encontrado"

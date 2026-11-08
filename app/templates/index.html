@@ -6,6 +6,7 @@
     <title>Software pegada de carbono</title>
     <link rel="stylesheet" href="../static/styles/index.css">
     <link rel="stylesheet" href="../static/styles/base.css">
+    <script src="../static/scripts/Comum.js" defer></script>
     <script src="../static/scripts/index.js" defer></script>
 </head>
 <body>
@@ -17,6 +18,8 @@
             <a href="{{url_for('Home')}}">Início</a>
             <a href="{{url_for('Dados')}}" aria-current="page">Dados</a>
             <a href="{{url_for('QRLista')}}" aria-current="page">QRs</a>
+            <a href="{{url_for('CatalogoPagina')}}">Catálogo</a>
+            <a href="{{url_for('InventarioPagina')}}">Inventário</a>
             <a href="{{url_for('Calculos')}}" aria-current="page">Calculos</a>
         </nav>
     </header>
@@ -27,12 +30,14 @@
             <button data-acao="adicionar" data-entidade="VeiculoModelo">Adicionar veículo ao banco de dados</button>
             <button data-acao="editar" data-entidade="VeiculoModelo">Editar veículo do banco de dados</button>
             <button data-acao="remover" data-entidade="VeiculoModelo">Remover veículo do banco de dados</button>
+            <a href="{{url_for('InventarioPagina')}}#modelo">Componentes de referência do modelo</a>
         </div>
         <h1>Controle de dados veiculo individual</h1>
         <div class="Veiculo">
             <button data-acao="adicionar" data-entidade="veiculo">Adicionar veículo ao banco de dados</button>
             <button data-acao="editar" data-entidade="veiculo">Editar veículo do banco de dados</button>
             <button data-acao="remover" data-entidade="veiculo">Remover veículo do banco de dados</button>
+            <a href="{{url_for('InventarioPagina')}}">Inventário e composição do veículo</a>
         </div>
         <h1>Controle de dados componentes</h1>
         <div class="Componentes">
@@ -59,7 +64,7 @@
             <form id="modalForm">
                 <!-- Aparece só em editar/remover e quando adicionar veiculo(usando modelo como base) -->
                 <label class="ModalSeletor" id="modalSeletor" hidden>
-                    Registro
+                    <span id="seletorTitulo">Registro</span>
                     <select id="seletorRegistro"></select>
                 </label>
 
@@ -129,6 +134,30 @@
     <label>Estado
         <input name="estado" value="Fim de vida">
     </label>
+    <label>Motorização
+        <input name="motorizacao" list="listaMotorizacao" maxlength="30">
+    </label>
+    <label>Combustível
+        <input name="combustivel" list="listaCombustivel" maxlength="30">
+    </label>
+    <label>Origem dos dados
+        <select name="origem_dados">
+            <option value="real">real (medido/inspecionado)</option>
+            <option value="exemplo">exemplo (demonstrativo)</option>
+            <option value="referencia_pdf">referência do PDF (hipotético)</option>
+            <option value="nao_informado">não informada</option>
+        </select>
+    </label>
+    <label>Fonte da composição
+        <select name="fonte_composicao">
+            <option value="por_peca">por peça (JSON)</option>
+            <option value="agregada">agregada (global do veículo)</option>
+        </select>
+    </label>
+    <label data-so-adicionar>
+        <input type="checkbox" name="copiar_inventario" checked>
+        Copiar o inventário do modelo base (entra como valor de referência, a confirmar na inspeção)
+    </label>
 </fieldset>
 
                 <fieldset class="ModalComponentes" data-entidade="componentes" hidden disabled>
@@ -141,6 +170,23 @@
                     <label>Peso (kg)
                         <input type="number" name="peso_kg" min="0" step="any" required>
                     </label>
+                    <label>Origem da massa
+                        <select name="massa_origem">
+                            <option value="nao_informado">não informada</option>
+                            <option value="referencia">referência</option>
+                            <option value="medido">medido</option>
+                            <option value="estimado">estimado</option>
+                            <option value="fornecedor">fornecedor</option>
+                        </select>
+                    </label>
+                    <label>Código da peça
+                        <input name="codigo_peca" maxlength="60">
+                    </label>
+                    <label>Fornecedor
+                        <input name="fornecedor" maxlength="100">
+                    </label>
+                    <p class="Nota">A composição por material desta peça é editada em
+                        <a href="{{url_for('InventarioPagina')}}">Inventário</a>.</p>
                 </fieldset>
 
                 <fieldset class="ModalMateriais" data-entidade="materiais" hidden disabled>
@@ -148,7 +194,7 @@
                         <select name="peca_id" required></select>
                     </label>
                     <label>Categoria
-                        <input name="categoria" placeholder="Aço, alumínio, plásticos..." required>
+                        <input name="categoria" placeholder="Aço, alumínio, plásticos..." list="listaCatalogo" required>
                     </label>
                     <label>Peso (kg)
                         <input type="number" name="peso_kg" min="0" step="any" required>
@@ -163,6 +209,7 @@
                 </div>
 
                 <!-- Sugestões (o usuário ainda pode digitar outro valor) -->
+                <datalist id="listaCatalogo"></datalist>
                 <datalist id="listaMotorizacao">
                     <option value="Combustão interna">
                     <option value="Híbrido">

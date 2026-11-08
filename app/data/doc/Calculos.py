@@ -7,6 +7,7 @@ import unicodedata
 GRUPOS = ["Aço", "Ferro fundido", "Alumínio", "Cobre", "Plásticos",
           "Vidro", "Borracha", "Chumbo", "Outros"]   # seção 4 do PDF
 FLUIDOS = "Fluidos"                                    # tratado à parte (seção 11.4)
+ESQUEMA_PDF = "pdf_demo"                             # esquema de grupos do catálogo usado por este modelo
 
 # seção 5: (reciclagem, reuso, valorização, disposição) em % — cada linha fecha 100
 DESTINOS_PADRAO = {
@@ -94,7 +95,6 @@ _ALIAS = {
 }
 
 def GrupoMaterial(categoria):
-    """Converte o texto livre de Materiais.Categoria em um dos grupos do PDF."""
     n = _norm(categoria)
     if n in _ALIAS:
         return _ALIAS[n]
@@ -113,11 +113,6 @@ def ItemAtencao(categoria):
 
 #region motor
 def calcular(massa_total_kg, materiais_kg, fluidos_kg, atividade, destinos, fatores):
-    """Equação fundamental do PDF: E = AD x FE. Função pura (não toca no banco).
-
-    materiais_kg: {grupo: kg}      destinos: {grupo: (rec, reuso, valor, disp)} em %
-    atividade: dict como ATIVIDADE_PADRAO      fatores: {chave: valor}
-    """
     fe = lambda k: float(fatores.get(k) or 0.0)
     avisos = []
     f_tr = fe("transporte")
@@ -200,7 +195,7 @@ def calcular(massa_total_kg, materiais_kg, fluidos_kg, atividade, destinos, fato
 
 
 def variar_destinos(destinos, reciclagem_para_disposicao_pct=0.0, disposicao_para_reciclagem_pct=0.0):
-    """Move uma fração (relativa) entre reciclagem e disposição, em todos os materiais."""
+    #Move uma fração (relativa) entre reciclagem e disposição, em todos os materiais.#
     novo = {}
     for g, (r, u, v, d) in destinos.items():
         a = r * reciclagem_para_disposicao_pct / 100
@@ -210,7 +205,7 @@ def variar_destinos(destinos, reciclagem_para_disposicao_pct=0.0, disposicao_par
 
 
 def cenarios(massa_total_kg, materiais_kg, fluidos_kg, atividade, destinos, fatores):
-    """Seção 15: compara baixa / base / alta recuperação."""
+    #Seção 15: compara baixa / base / alta recuperação.#
     saida = []
     for chave, cfg in CENARIOS.items():
         dest = variar_destinos(destinos, cfg.get("reciclagem_para_disposicao_pct", 0.0),
@@ -272,7 +267,7 @@ def sensibilidade(massa_total_kg, materiais_kg, fluidos_kg, atividade, destinos,
 
 #region banco
 class Calculo:
-    """Cola entre o banco e o motor, no mesmo estilo de classe estática do GerarDados.py."""
+    #Cola entre o banco e o motor, no mesmo estilo de classe estática do GerarDados.py.#
 
     @staticmethod
     def Parametros(s):
@@ -296,54 +291,111 @@ class Calculo:
                 for k, v in ATIVIDADE_PADRAO.items()}, False
 
     @staticmethod
+    def Grupos(s, esquema=ESQUEMA_PDF):
+        #{material_id: grupo de cálculo} do catálogo para o esquema. Sem linha = sem grupo.#
+        from app.data.db import MaterialGrupo
+        return {g.material_id: g.grupo for g in s.query(MaterialGrupo).filter_by(esquema=esquema)}
+
+    @staticmethod
     def Entradas(s, v):
-        """Soma Materiais.Peso do veículo por grupo do PDF."""
-        materiais, fluidos, avisos, atencao, em_outros = {}, 0.0, [], [], set()
-        for p in v.pecas:
+        from app.data.db import ComposicaoVeiculo, ResolverMaterial
+        from app.services import Inventario
+        catalogo = Inventario.StatusCatalogo(s)
+        grupos = Calculo.Grupos(s)
+        fonte = v.fonte_composicao or "por_peca"
+        pecas = [p for p in v.pecas if p.removido_em is None]
+        materiais, fluidos, avisos, atencao = {}, 0.0, [], []
+        fora = {"sem_grupo": {}, "nao_identificada_kg": 0.0, "sem_composicao_kg": 0.0}
+
+        for p in pecas:
             destino = ItemAtencao(p.Categoria)
             if destino:
                 atencao.append({"peca_id": p.id, "categoria": p.Categoria,
                                 "peso_kg": p.Peso, "destino": destino})
-            if not p.materiais:
-                avisos.append(f"Peça #{p.id} ({p.Categoria}) não tem materiais cadastrados")
-            soma = sum((m.Peso or 0.0) for m in p.materiais)
-            if p.Peso and soma > p.Peso + 0.01:
-                avisos.append(f"Peça #{p.id} ({p.Categoria}): materiais ({soma:g} kg) "
-                              f"maiores que a peça ({p.Peso:g} kg)")
-            for m in p.materiais:
-                g = GrupoMaterial(m.Categoria)
-                if g == FLUIDOS:
-                    fluidos += m.Peso or 0.0
-                else:
-                    materiais[g] = materiais.get(g, 0.0) + (m.Peso or 0.0)
-                    if g == "Outros" and _norm(m.Categoria) != "outros":
-                        em_outros.add(m.Categoria)
-        if em_outros:
-            avisos.append("Materiais tratados como 'Outros' (sem grupo próprio no PDF): "
-                          + ", ".join(sorted(em_outros)))
-        return materiais, fluidos, avisos, atencao
+
+        itens = []          # (material_id, nome_texto, massa_kg)
+        if fonte == "por_peca":
+            for p in pecas:
+                if p.composicao is None:
+                    fora["sem_composicao_kg"] += p.Peso or 0.0
+                    avisos.append(f"Peça #{p.id} ({p.Categoria}) sem composição informada: "
+                                  f"{p.Peso if p.Peso is not None else '?'} kg ficam fora do cálculo")
+                    continue
+                for i in p.composicao:
+                    massa = i.get("massa_kg") or 0.0
+                    if i.get("status") == "identificado":
+                        itens.append((i.get("material_id"), i.get("categoria"), massa))
+                    else:
+                        fora["nao_identificada_kg"] += massa
+        else:
+            if any(p.composicao is not None for p in pecas):
+                avisos.append("Composição por peça ignorada: a fonte do veículo é 'agregada' "
+                              "(evita contar a mesma massa duas vezes)")
+            for c in s.query(ComposicaoVeiculo).filter(ComposicaoVeiculo.veiculo_id == v.id):
+                mid = c.material_id
+                if mid is None and c.categoria_texto:
+                    m = ResolverMaterial(s, c.categoria_texto, criar=False)
+                    mid = m.id if m else None
+                itens.append((mid, c.categoria_texto, c.massa_kg or 0.0))
+
+        for mid, nome, massa in itens:
+            nome = catalogo.get(mid, (nome, None))[0] or nome or "sem nome"
+            grupo = grupos.get(mid)
+            if grupo == FLUIDOS:
+                fluidos += massa
+            elif grupo in GRUPOS:
+                materiais[grupo] = materiais.get(grupo, 0.0) + massa
+            else:
+                motivo = "sem grupo de cálculo" if grupo is None else f"grupo '{grupo}' sem fatores neste modelo"
+                fora["sem_grupo"][nome] = fora["sem_grupo"].get(nome, 0.0) + massa
+                fora.setdefault("motivos", {})[nome] = motivo
+        for nome, kg in sorted(fora["sem_grupo"].items()):
+            avisos.append(f"Material '{nome}' ({kg:g} kg): {fora['motivos'][nome]} em '{ESQUEMA_PDF}'; "
+                          f"NÃO entrou no cálculo")
+        if fora["nao_identificada_kg"]:
+            avisos.append(f"{fora['nao_identificada_kg']:g} kg declarados como não identificados ficam fora do cálculo")
+        return materiais, fluidos, avisos, atencao, fora
 
     @staticmethod
     def Veiculo(s, veiculo_id, parte="resumo"):
         from app.data.db import Veiculo
+        from app.services import Inventario
         v = s.get(Veiculo, veiculo_id)
-        if v is None:
+        if v is None or v.removido_em is not None:
             return None
         fatores, destinos = Calculo.Parametros(s)
         atividade, padrao = Calculo.Atividade(s, veiculo_id)
-        materiais, fluidos, avisos, atencao = Calculo.Entradas(s, v)
+        materiais, fluidos, avisos, atencao, fora = Calculo.Entradas(s, v)
         args = (v.MassaTotal or 0.0, materiais, fluidos, atividade, destinos, fatores)
         if parte == "cenarios":
             return cenarios(*args)
         if parte == "sensibilidade":
             return sensibilidade(*args)
         r = calcular(*args)
+
+        # qualidade: o resultado só é INTEGRAL se o inventário cobre a massa e nada ficou de fora
+        inv = Inventario.IndicadoresVeiculo(s, v)
+        motivos = list(inv["motivos_parcial"])
+        kg_fora = sum(fora["sem_grupo"].values()) + fora["nao_identificada_kg"] + fora["sem_composicao_kg"]
+        if kg_fora > Inventario.TOL_KG:
+            motivos.append(f"{kg_fora:.2f} kg do inventário não entraram no cálculo")
+        r["resultado_integral"] = not motivos
+        r["motivos_parcial"] = motivos
+        r["qualidade"] = {"fonte_composicao": inv["fonte_composicao"], "cobertura_pct": inv["cobertura_pct"],
+                          "massa_identificada_kg": inv["massa_identificada_kg"],
+                          "massa_nao_identificada_kg": inv["massa_nao_identificada_kg"],
+                          "massa_fora_do_calculo_kg": round(kg_fora, 2),
+                          "origem_dados": v.origem_dados}
         r["avisos"] = avisos + r["avisos"]
+        if motivos:
+            r["avisos"].insert(0, "RESULTADO PARCIAL (não é o resultado integral do veículo): " + "; ".join(motivos))
+        if v.origem_dados in ("exemplo", "referencia_pdf"):
+            r["avisos"].append(f"Veículo com dados demonstrativos (origem_dados={v.origem_dados})")
         if padrao:
             r["avisos"].append("Dados de atividade não cadastrados para este veículo: "
                                "usando os valores hipotéticos do PDF")
         if not materiais and not fluidos:
-            r["avisos"].append("Veículo sem materiais cadastrados: o resultado só reflete "
+            r["avisos"].append("Nenhum material entrou no cálculo: o resultado só reflete "
                                "transporte inicial, diesel e eletricidade")
         r["veiculo"] = {"id": v.id, "veiculo": v.veiculo, "modelo": v.Modelo,
                         "chassi": v.Chassi, "massa_total_kg": v.MassaTotal}

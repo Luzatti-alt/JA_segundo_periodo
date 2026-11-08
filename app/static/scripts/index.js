@@ -56,10 +56,10 @@ const ACOES = {
 };
 
 const AVISOS_REMOVER = {
-    VeiculoModelo: "\n\nIsso também apaga componentes, materiais e QRs ligados a este modelo.",
-    veiculo: "\n\nIsso também apaga componentes, materiais e QRs ligados a este veículo.",
-    componentes: "\n\nIsso também apaga os materiais e QRs desta peça.",
-    materiais: "\n\nIsso também apaga os QRs deste material.",
+    VeiculoModelo: "\n\nOs componentes de referência do modelo são apagados. Veículos já criados continuam, só perdem o vínculo com o modelo.",
+    veiculo: "\n\nRemoção lógica: o veículo e suas peças saem das listas, mas histórico e QRs ficam preservados.",
+    componentes: "\n\nRemoção lógica: a peça sai das listas, mas composição, lotes e QR ficam preservados.",
+    materiais: "\n\nO lote é apagado junto com os QRs dele, e o item sai da composição da peça.",
 };
 
 const modal = document.getElementById("modal");
@@ -76,17 +76,8 @@ let entidadeAtual = null;
 let registros = [];
 
 
-async function api(url, opcoes = {}) {
-    const resposta = await fetch(url, {
-        headers: { "Content-Type": "application/json" },
-        ...opcoes,
-    });
-    const corpo = await resposta.json().catch(() => ({}));
-    if (!resposta.ok) {
-        throw new Error(corpo.erro || `Erro ${resposta.status}`);
-    }
-    return corpo;
-}
+// a implementação fica em Comum.js (compartilhada com as páginas Inventário e Catálogo)
+const api = (url, opcoes) => Pegada.api(url, opcoes);
 
 function mostrarMensagem(texto, tipo = "") {
     mensagem.textContent = texto;
@@ -104,14 +95,20 @@ function preencherOpcoes(select, itens, textoDe, placeholder) {
 }
 
 function limparCampos() {
-    fieldsetAtual().querySelectorAll("[name]").forEach(campo => { campo.value = ""; });
+    fieldsetAtual().querySelectorAll("[name]").forEach(campo => {
+        if (campo.type === "checkbox") campo.checked = campo.defaultChecked;
+        else campo.value = "";
+    });
 }
 
 function lerCampos() {
     const dados = {};
     fieldsetAtual().querySelectorAll("[name]").forEach(campo => {
+        if (campo.type === "checkbox") { dados[campo.name] = campo.checked; return; }
         const numerico = campo.type === "number" || campo.name.endsWith("_id");
         const valor = campo.value.trim();
+        // select vazio não é enviado: a API valida os valores aceitos e rejeitaria null
+        if (campo.tagName === "SELECT" && valor === "") return;
         dados[campo.name] = valor === "" ? null : (numerico ? Number(valor) : valor);
     });
     return dados;
@@ -128,12 +125,6 @@ async function carregarSelects() {
         const itens = await api(rota);
         preencherOpcoes(select, itens, rotulo, itens.length ? "Selecione..." : `Nenhum ${nome} cadastrado`);
     }));
-}
-
-async function carregarRegistros() {
-    const { rota, rotulo } = ENTIDADES[entidadeAtual];
-    registros = await api(rota);
-    preencherOpcoes(seletor, registros, rotulo, registros.length ? "Selecione..." : "Nenhum registro cadastrado");
 }
 
 // abre e fecha o modal
@@ -159,6 +150,8 @@ async function abrirModal(acao, entidade) {
     });
     modeloBase = null;
     seletorBox.hidden = acao === "adicionar" && !usaModeloBase();
+    fieldsetAtual().querySelectorAll("[data-so-adicionar]").forEach(e => { e.hidden = acao !== "adicionar"; });
+    if (entidade === "materiais") Pegada.carregarCatalogo().catch(() => {});   // sugestões de categoria
     if (seletorTitulo) seletorTitulo.textContent = usaModeloBase() ? "Modelo base" : "Registro";
     modal.hidden = false;
 
@@ -201,7 +194,10 @@ seletor.addEventListener("change", () => {
         return;
     }
     fieldsetAtual().querySelectorAll("[name]").forEach(campo => {
-        campo.value = dado(registro, campo.name) ?? "";
+        if (campo.type === "checkbox") return;                 // opção da ação, não vem do registro
+        const v = dado(registro, campo.name);
+        if (v === undefined && campo.tagName === "SELECT") { campo.selectedIndex = 0; return; }   // volta ao padrão
+        campo.value = v ?? "";
     });
     if (txt) txt.textContent = `${registro.veiculo ?? ""} ${registro.modelo ?? ""}`;
 });
@@ -234,13 +230,17 @@ if (acaoAtual !== "remover") {
 
 btnConfirmar.disabled = true;
     try {
-        await api(url, opcoes);
+        const resposta = await api(url, opcoes);
         form.reset();
         if (acaoAtual !== "adicionar") await carregarRegistros();
         await carregarSelects(); // mantém os selects atualizados com o que acabou de mudar
-        mostrarMensagem(`${nome[0].toUpperCase()}${nome.slice(1)} ${feito} com sucesso.`, "ok");
+        const extras = [];
+        if (resposta?.pecas_copiadas) extras.push(`${resposta.pecas_copiadas} peça(s) copiada(s) do modelo como valor de referência`);
+        if (resposta?.alertas?.length) extras.push(`Alertas: ${resposta.alertas.join("; ")}`);
+        if (resposta?.indicadores) extras.push(Pegada.resumoIndicadores(resposta.indicadores));
+        mostrarMensagem(`${nome[0].toUpperCase()}${nome.slice(1)} ${feito} com sucesso.${extras.length ? " " + extras.join(" | ") : ""}`, "ok");
     } catch (erro) {
-        mostrarMensagem(erro.message, "erro");
+        mostrarMensagem([erro.message, ...(erro.detalhes || []).filter(d => !erro.message.includes(d))].join(" | "), "erro");
     } finally {
         btnConfirmar.disabled = false;
     }

@@ -49,7 +49,7 @@ function campoNumero(valor, passo = "any") {
 //#region resultado
 function mostrarResumo(r) {
     const cartoes = [
-        ["Emissão bruta", `${num(r.total_kg_co2e)} kgCO2e`, "por veículo"],
+        ["Emissão bruta", `${num(r.total_kg_co2e)} kgCO2e`, r.resultado_integral ? "por veículo" : "PARCIAL · por veículo"],
         ["Taxa de reciclagem", `${num(r.destinos.reciclagem.participacao_pct)} %`, `${num(r.destinos.reciclagem.massa_kg)} kg`],
         ["Benefício potencial", `${num(r.beneficio_potencial_kg_co2e)} kgCO2e`, "indicador hipotético"],
         ["Saldo comparativo", `${num(r.saldo_comparativo_kg_co2e)} kgCO2e`, "emissão - benefício"],
@@ -62,7 +62,28 @@ function mostrarResumo(r) {
     }));
 }
 
+// qualidade do resultado: integral x parcial, motivos e massas (tudo calculado pela API)
+function mostrarQualidade(r) {
+    const banner = document.getElementById("calcBanner");
+    banner.textContent = r.resultado_integral
+        ? "Resultado integral: o inventário cobre a massa do veículo e nada ficou fora do cálculo."
+        : "RESULTADO PARCIAL: não representa o veículo inteiro.";
+    banner.className = r.resultado_integral ? "Nota" : "Aviso";
+    document.getElementById("calcMotivos").replaceChildren(...(r.motivos_parcial || []).map(m => celula("li", m)));
+    const q = r.qualidade || {}, m = r.massas || {};
+    const fmt = v => typeof v === "number" ? num(v) : (v ?? "—");
+    montar("tabQualidade", ["Indicador", "Valor"], [
+        ["Origem dos dados", q.origem_dados], ["Fonte da composição", q.fonte_composicao],
+        ["Cobertura do inventário (%)", q.cobertura_pct], ["Massa identificada (kg)", q.massa_identificada_kg],
+        ["Massa não identificada (kg)", q.massa_nao_identificada_kg], ["Massa fora do cálculo (kg)", q.massa_fora_do_calculo_kg],
+        ["Massa sólida no cálculo (kg)", m.solidos_kg], ["Fluidos (kg)", m.fluidos_kg],
+        ["Massa não catalogada (kg)", m.nao_catalogada_kg],
+    ].map(([k, v]) => linha([k, fmt(v)])));
+    document.getElementById("linkInventario").href = `/Inventario?veiculo=${r.veiculo.id}`;
+}
+
 function mostrarResultado(r) {
+    mostrarQualidade(r);
     mostrarResumo(r);
     montar("tabEtapas", ["Etapa", "kgCO2e", "Participação (%)"],
         r.etapas.map(e => linha([e.etapa, num(e.kg_co2e), num(e.participacao_pct)])));
@@ -173,6 +194,8 @@ async function iniciar() {
         seletor.replaceChildren(new Option(veiculos.length ? "Selecione..." : "Nenhum veículo cadastrado", ""),
             ...veiculos.map(v => new Option(`#${v.id} · ${v.veiculo} ${v.modelo} · ${v.chassi}`, v.id)));
         await Promise.all([carregarDestinos(), carregarFatores()]);
+        const pre = new URLSearchParams(location.search).get("veiculo");   // vindo da página Inventário
+        if (pre) { seletor.value = pre; calcular(); }
     } catch (e) {
         erro.textContent = `Não foi possível carregar os dados: ${e.message}`;
         erro.hidden = false;

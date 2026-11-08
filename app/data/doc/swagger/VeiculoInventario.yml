@@ -1,0 +1,14 @@
+tags:
+  - Inventário
+summary: "Cobertura da composição do veículo (resultado_integral e motivos_parcial)"
+parameters:
+  - name: veiculo_id
+    in: path
+    required: true
+    type: integer
+    description: "id do veículo"
+responses:
+  200:
+    description: "Indicadores de massa e cobertura"
+  404:
+    description: "Não encontrado"

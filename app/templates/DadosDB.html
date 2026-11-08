@@ -17,6 +17,8 @@
             <a href="{{url_for('Home')}}">Início</a>
             <a href="{{url_for('Dados')}}" aria-current="page">Dados</a>
             <a href="{{url_for('QRLista')}}" aria-current="page">QRs</a>
+            <a href="{{url_for('CatalogoPagina')}}">Catálogo</a>
+            <a href="{{url_for('InventarioPagina')}}">Inventário</a>
             <a href="{{url_for('Calculos')}}" aria-current="page">Calculos</a>
         </nav>
     </header>
@@ -37,6 +39,10 @@
         <section>
             <h2>Materiais</h2>
             <div class="Tabela"><table data-rota="/Materiais"></table></div>
+        </section>
+        <section>
+            <h2>Catálogo de materiais</h2>
+            <div class="Tabela"><table data-rota="/Catalogo"></table></div>
         </section>
         <p class="Aviso" id="erroDados" hidden></p>
     </main>
