@@ -1,0 +1,14 @@
+tags:
+  - Modelos
+summary: "Edita componente de referência"
+parameters:
+  - name: comp_id
+    in: path
+    required: true
+    type: integer
+    description: "id do componente do modelo"
+responses:
+  200:
+    description: "Atualizado"
+  404:
+    description: "Não encontrado"

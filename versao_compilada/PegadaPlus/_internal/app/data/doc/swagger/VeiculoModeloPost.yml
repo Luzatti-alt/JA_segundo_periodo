@@ -1,0 +1,58 @@
+tags:
+- Modelos de veículo
+summary: Cria um modelo de veículo
+consumes: &id001
+- application/json
+produces: *id001
+parameters:
+- name: body
+  in: body
+  required: true
+  description: Dados em JSON
+  schema:
+    type: object
+    properties:
+      veiculo:
+        type: string
+        example: Carro
+      modelo:
+        type: string
+        example: Gol 1.0
+      ano:
+        type: integer
+        example: 2012
+      categoria:
+        type: string
+        example: Passeio
+      massa_total_kg:
+        type: number
+        example: 980.5
+      vida_util_anos:
+        type: number
+        example: 15
+      quilometragem_km:
+        type: number
+        example: 180000
+      quantidade_por_modelos:
+        type: integer
+        example: 1
+        default: 1
+      estado:
+        type: string
+        example: Fim de vida
+        default: Fim de vida
+responses:
+  201:
+    description: Modelo criado
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+  400:
+    description: Dados inválidos
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string

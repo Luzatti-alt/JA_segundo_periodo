@@ -1,0 +1,19 @@
+tags:
+  - QR Code
+summary: Consultar relatório pelo código permanente do QR
+description: Resolve o código permanente impresso no QR Code e retorna o relatório correspondente em PDF. O conteúdo é exibido inline no navegador.
+produces:
+  - application/pdf
+parameters:
+  - name: codigo
+    in: path
+    type: string
+    required: true
+    description: Código permanente contido no QR Code.
+responses:
+  200:
+    description: Relatório PDF encontrado.
+    schema:
+      type: file
+  404:
+    description: Código não encontrado ou relatório indisponível.

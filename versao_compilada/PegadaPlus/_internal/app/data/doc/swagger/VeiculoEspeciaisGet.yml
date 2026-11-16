@@ -1,0 +1,46 @@
+tags:
+  - Itens especiais
+summary: Consultar itens especiais de um veículo
+description: Retorna componentes e resíduos especiais associados ao veículo. Esses itens representam informações de rota/tratamento e não entram nos cálculos de emissões.
+parameters:
+  - name: veiculo_id
+    in: path
+    type: integer
+    required: true
+    description: ID do veículo.
+responses:
+  200:
+    description: Itens especiais do veículo.
+    schema:
+      type: object
+      properties:
+        veiculo_id:
+          type: integer
+        itens:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              item:
+                type: string
+              quantidade:
+                type: number
+                nullable: true
+              unidade:
+                type: string
+                enum: [L, kg]
+                nullable: true
+              destino:
+                type: string
+                nullable: true
+              origem:
+                type: string
+  404:
+    description: Veículo não encontrado.
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string

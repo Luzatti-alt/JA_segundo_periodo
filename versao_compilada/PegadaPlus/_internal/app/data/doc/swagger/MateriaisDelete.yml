@@ -1,0 +1,30 @@
+tags:
+- Materiais
+summary: Remove um material
+produces:
+- application/json
+parameters:
+- name: material_id
+  in: path
+  required: true
+  type: integer
+  description: ID do material
+responses:
+  200:
+    description: Removido
+    schema:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+  400:
+    description: Erro ao remover
+    schema: &id001
+      type: object
+      properties:
+        erro:
+          type: string
+  404:
+    description: Material não encontrado
+    schema: *id001

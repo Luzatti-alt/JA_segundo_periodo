@@ -1,0 +1,46 @@
+tags:
+- Fatores de emissão
+summary: Altera o valor de um fator de emissão
+consumes: &id001
+- application/json
+produces: *id001
+parameters:
+- name: chave
+  in: path
+  required: true
+  type: string
+  description: Chave do fator (pode conter /)
+- name: body
+  in: body
+  required: true
+  description: Dados em JSON
+  schema:
+    type: object
+    properties:
+      valor:
+        type: number
+        example: 2.3
+      origem:
+        type: string
+        description: Opcional; mantém a origem padrão se omitido
+    required:
+    - valor
+responses:
+  200:
+    description: Salvo
+    schema:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+  400:
+    description: Valor ausente, inválido ou negativo
+    schema: &id002
+      type: object
+      properties:
+        erro:
+          type: string
+  404:
+    description: Fator desconhecido
+    schema: *id002

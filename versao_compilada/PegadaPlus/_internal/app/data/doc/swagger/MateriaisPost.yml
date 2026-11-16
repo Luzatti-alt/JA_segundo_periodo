@@ -1,0 +1,43 @@
+tags:
+- Materiais
+summary: Cria um material
+consumes: &id001
+- application/json
+produces: *id001
+parameters:
+- name: body
+  in: body
+  required: true
+  description: Dados em JSON
+  schema:
+    type: object
+    properties:
+      peca_id:
+        type: integer
+        example: 1
+      categoria:
+        type: string
+        example: Aço
+      peso_kg:
+        type: number
+        example: 35.2
+    required:
+    - peca_id
+responses:
+  201:
+    description: Material criado
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+  400:
+    description: Dados inválidos
+    schema: &id002
+      type: object
+      properties:
+        erro:
+          type: string
+  404:
+    description: Peça não encontrada
+    schema: *id002

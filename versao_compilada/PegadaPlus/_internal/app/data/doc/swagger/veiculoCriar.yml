@@ -1,0 +1,69 @@
+tags:
+- Veículos
+summary: Cria um veículo
+consumes: &id001
+- application/json
+produces: *id001
+parameters:
+- name: body
+  in: body
+  required: true
+  description: Dados em JSON
+  schema:
+    type: object
+    properties:
+      veiculo:
+        type: string
+        example: Carro
+      modelo:
+        type: string
+        example: Gol 1.0
+      ano:
+        type: integer
+        example: 2012
+      categoria:
+        type: string
+        example: Passeio
+      massa_total_kg:
+        type: number
+        example: 980.5
+      vida_util_anos:
+        type: number
+        example: 15
+      quilometragem_km:
+        type: number
+        example: 180000
+      estado:
+        type: string
+        example: Fim de vida
+        default: Fim de vida
+      chassi:
+        type: string
+        example: 9BWZZZ377VT004251
+      modelo_base_id:
+        type: integer
+        description: ID do modelo base (opcional)
+        example: 1
+    required:
+    - chassi
+responses:
+  201:
+    description: Veículo criado
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+  400:
+    description: Chassi não informado ou dados inválidos
+    schema: &id002
+      type: object
+      properties:
+        erro:
+          type: string
+  404:
+    description: Modelo base não encontrado
+    schema: *id002
+  409:
+    description: Já existe um veículo com este chassi
+    schema: *id002

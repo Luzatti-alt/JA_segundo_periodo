@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/styles/base.css">
+    <link rel="stylesheet" href="../static/styles/Calculos.css">
+    <script src="../static/scripts/Calculos.js" defer></script>
+    <title>Cálculos</title>
+</head>
+<body>
+    {% include 'cabecalho.html' %}
+    <main>
+        <section class="CalcControle Painel">
+            <h2>Pegada de carbono no fim de vida</h2>
+            <label>Veículo
+                <select id="calcVeiculo"></select>
+            </label>
+            <button type="button" id="btnCalcular">Calcular</button>
+        </section>
+        <p class="Aviso" id="calcErro" hidden></p>
+
+        <div id="calcResultado" hidden>
+            <section class="Painel" id="calcQualidade">
+                <p id="calcBanner"></p>
+                <ul id="calcMotivos"></ul>
+                <div class="Tabela"><table id="tabQualidade"></table></div>
+                <p class="Nota"><a id="linkInventario" href="#">Ver inventário e composição deste veículo</a></p>
+            </section>
+            <section class="CalcResumo" id="calcResumo"></section>
+
+            <section class="Painel">
+                <h2>Emissões brutas por etapa</h2>
+                <div class="Tabela"><table id="tabEtapas"></table></div>
+            </section>
+            <section class="Painel">
+                <h2>Reciclagem por material</h2>
+                <div class="Tabela"><table id="tabReciclagem"></table></div>
+            </section>
+            <section class="Painel">
+                <h2>Destino da massa</h2>
+                <div class="Tabela"><table id="tabDestinoMassa"></table></div>
+            </section>
+            <section class="Painel">
+                <h2>Benefício potencial de substituição</h2>
+                <div class="Tabela"><table id="tabBeneficio"></table></div>
+                <p class="Nota">Indicador comparativo e hipotético. Não representa carbono removido da atmosfera,
+                    e o saldo não deve ser apresentado como "pegada negativa".</p>
+            </section>
+            <section class="Painel">
+                <h2>Comparação de cenários</h2>
+                <div class="Tabela"><table id="tabCenarios"></table></div>
+            </section>
+            <section class="Painel">
+                <h2>Análise de sensibilidade</h2>
+                <div class="Tabela"><table id="tabSensibilidade"></table></div>
+            </section>
+            <section class="Painel">
+                <h2>Lista de atenção</h2>
+                <p class="Nota">Itens que não são sucata convencional. "Registrado" vem dos itens especiais do veículo
+                    (página Inventário); "detectado pelo nome" é um palpite pelo nome dos componentes.</p>
+                <div class="Tabela"><table id="tabAtencao"></table></div>
+            </section>
+            <section class="Painel">
+                <h2>Avisos</h2>
+                <ul id="listaAvisos"></ul>
+            </section>
+        </div>
+
+        <section class="Painel" id="calcFronteira">
+            <h2>Fronteira do cálculo e etapas do processo</h2>
+            <ol>
+                <li>Recebimento do veículo em fim de vida</li>
+                <li>Transporte interno até a área de tratamento</li>
+                <li>Inspeção</li>
+                <li>Descontaminação (remoção de fluidos e itens perigosos)</li>
+                <li>Desmontagem</li>
+                <li>Separação e triagem por material</li>
+                <li>Encaminhamento a reciclagem, reuso, valorização ou disposição</li>
+            </ol>
+            <p class="Nota"><b>Como ler as emissões:</b> cada fator de reciclagem e de disposição já inclui as emissões de
+                todas as etapas daquele destino, inclusive os combustíveis e a energia elétrica desses processos. O diesel e a
+                eletricidade de "Emissões brutas por etapa" são só os das operações gerais de fim de vida, como desmontagem e
+                separação dos materiais, contabilizados à parte porque ocorrem antes dos processos de cada material.</p>
+        </section>
+
+        <section class="CalcParametros Painel">
+            <h2>Parâmetros do modelo</h2>
+            <p class="Nota">Os valores iniciais são hipotéticos (PDF de apoio). Troque pelos dados reais e a origem de cada fator.</p>
+            <details>
+                <summary>Dados de atividade do veículo selecionado</summary>
+                <form id="formAtividade" class="CalcGrade"></form>
+            </details>
+            <details>
+                <summary>Destino dos materiais (%)</summary>
+                <div class="Tabela"><table id="tabDestinos"></table></div>
+            </details>
+            <details>
+                <summary>Fatores de emissão</summary>
+                <div class="Tabela"><table id="tabFatores"></table></div>
+            </details>
+            <p class="ModalMensagem" id="calcMensagem" role="status"></p>
+        </section>
+    </main>
+</body>
+</html>

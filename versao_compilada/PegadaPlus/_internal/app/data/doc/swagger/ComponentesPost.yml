@@ -1,0 +1,43 @@
+tags:
+- Componentes (peças)
+summary: Cria um componente
+consumes: &id001
+- application/json
+produces: *id001
+parameters:
+- name: body
+  in: body
+  required: true
+  description: Dados em JSON
+  schema:
+    type: object
+    properties:
+      veiculo_id:
+        type: integer
+        example: 1
+      categoria:
+        type: string
+        example: Motor
+      peso_kg:
+        type: number
+        example: 120.5
+    required:
+    - veiculo_id
+responses:
+  201:
+    description: Componente criado
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+  400:
+    description: Dados inválidos
+    schema: &id002
+      type: object
+      properties:
+        erro:
+          type: string
+  404:
+    description: Veículo não encontrado
+    schema: *id002

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software pegada de carbono</title>
+    <link rel="stylesheet" href="../static/styles/base.css">
+    <link rel="stylesheet" href="../static/styles/index.css">
+    <script src="../static/scripts/Comum.js" defer></script>
+    <script src="../static/scripts/index.js" defer></script>
+</head>
+<body>
+    {% include 'cabecalho.html' %}
+    <main>
+        <!--talvez uma dashboard de emissões ou algo assim(ou algumas em um carrosel)-->
+        <h1>Cadastros</h1>
+        <div class="GradeCadastros">
+            <section class="Painel VeiculoModelo" aria-labelledby="tModelo">
+                <h2 id="tModelo">Modelos de veículo</h2>
+                <p class="Nota">Base reutilizável: massa, categoria e inventário de referência.</p>
+                <div class="GrupoAcoes">
+                    <button data-acao="adicionar" data-entidade="VeiculoModelo" aria-label="Adicionar modelo de veículo">Adicionar</button>
+                    <button data-acao="editar" data-entidade="VeiculoModelo" aria-label="Editar modelo de veículo">Editar</button>
+                    <button data-acao="remover" data-entidade="VeiculoModelo" aria-label="Remover modelo de veículo">Remover</button>
+                </div>
+                <a class="BotaoLink" href="{{url_for('InventarioPagina')}}#modelo">Componentes de referência do modelo</a>
+            </section>
+
+            <section class="Painel Veiculo" aria-labelledby="tVeiculo">
+                <h2 id="tVeiculo">Veículos individuais</h2>
+                <p class="Nota">Cada veículo parte de um modelo base e guarda chassi, estado e origem dos dados.</p>
+                <div class="GrupoAcoes">
+                    <button data-acao="adicionar" data-entidade="veiculo" aria-label="Adicionar veículo">Adicionar</button>
+                    <button data-acao="editar" data-entidade="veiculo" aria-label="Editar veículo">Editar</button>
+                    <button data-acao="remover" data-entidade="veiculo" aria-label="Remover veículo">Remover</button>
+                </div>
+                <a class="BotaoLink" href="{{url_for('InventarioPagina')}}">Inventário e composição do veículo</a>
+            </section>
+
+            <section class="Painel Componentes" aria-labelledby="tComponentes">
+                <h2 id="tComponentes">Componentes</h2>
+                <p class="Nota">Peças de um veículo, com massa e origem da massa.</p>
+                <div class="GrupoAcoes">
+                    <button data-acao="adicionar" data-entidade="componentes" aria-label="Adicionar componente">Adicionar</button>
+                    <button data-acao="editar" data-entidade="componentes" aria-label="Editar componente">Editar</button>
+                    <button data-acao="remover" data-entidade="componentes" aria-label="Remover componente">Remover</button>
+                </div>
+            </section>
+
+            <section class="Painel Material" aria-labelledby="tMateriais">
+                <h2 id="tMateriais">Materiais</h2>
+                <p class="Nota">Lotes físicos de material ligados a uma peça.</p>
+                <div class="GrupoAcoes">
+                    <button data-acao="adicionar" data-entidade="materiais" aria-label="Adicionar material">Adicionar</button>
+                    <button data-acao="editar" data-entidade="materiais" aria-label="Editar material">Editar</button>
+                    <button data-acao="remover" data-entidade="materiais" aria-label="Remover material">Remover</button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modal único: o JS mostra só a seção da entidade escolhida -->
+    <div class="modal" id="modal" hidden>
+        <div class="Modal_Conteudo" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+            <div class="ModalCabecalho">
+                <h2 id="modalTitulo"></h2>
+                <button type="button" class="ModalFechar" data-fechar aria-label="Fechar">&times;</button>
+            </div>
+
+            <form id="modalForm">
+                <!-- Aparece só em editar/remover e quando adicionar veiculo(usando modelo como base) -->
+                <label class="ModalSeletor" id="modalSeletor" hidden>
+                    <span id="seletorTitulo">Registro</span>
+                    <select id="seletorRegistro"></select>
+                </label>
+
+                <!-- Os names dos campos são iguais às chaves do JSON da API -->
+                <fieldset class="ModalVeiculoModelo" data-entidade="VeiculoModelo" hidden disabled>
+                    <label>Marca
+                        <input name="veiculo" placeholder="Nissan" required>
+                    </label>
+                    <label>Modelo
+                        <input name="modelo" placeholder="Leaf" required>
+                    </label>
+                    <label>Ano
+                        <input type="number" name="ano" min="1900" step="1">
+                    </label>
+                    <label>Chassi
+                        <input name="chassi" maxlength="30" placeholder="Chassi">
+                    </label>
+                    <label>Categoria
+                        <input name="categoria" placeholder="Veículo compacto de passeio" required>
+                    </label>
+                    <label>Massa total (kg)
+                        <input type="number" name="massa_total_kg" min="0" step="any" required>
+                    </label>
+                    <label>Quantidade deste modelo
+                        <input type="number" name="quantidade_por_modelos" min="1" step="1" value="1">
+                    </label>
+                    <label>Vida útil (anos)
+                        <input type="number" name="vida_util_anos" min="0" step="1">
+                    </label>
+                    <label>Quilometragem (km)
+                        <input type="number" name="quilometragem_km" min="0" step="1">
+                    </label>
+                    <label>Estado
+                        <input name="estado" value="Fim de vida">
+                    </label>
+                </fieldset>
+
+                <!-- esse segundo é para modelos incompletos/carros usados -->
+                <fieldset class="ModalVeiculo" data-entidade="veiculo" hidden disabled>
+    <!-- só exibição: o valor real vai nos inputs hidden abaixo -->
+    <p class="ModalVeiculoBase">
+        Veículo: <strong id="veiculoTexto">-</strong>
+    </p>
+    <input type="hidden" name="veiculo">
+    <input type="hidden" name="modelo">
+
+    <label>Chassi
+        <input name="chassi" maxlength="30">
+    </label>
+    <label>Ano
+        <input type="number" name="ano" min="1900" step="1">
+    </label>
+    <label>Categoria
+        <input name="categoria" placeholder="Veículo compacto de passeio">
+    </label>
+    <label>Massa total (kg)
+        <!-- preencher automaticamente porem teoricamente nn pode ser maior que peso do modelo base se for provavelmente tem algo errado-->
+        <input type="number" name="massa_total_kg" min="1" step="any">
+    </label>
+    <label>Vida útil (anos)
+        <input type="number" name="vida_util_anos" min="0" step="1">
+    </label>
+    <label>Quilometragem (km)
+        <input type="number" name="quilometragem_km" min="0" step="1">
+    </label>
+    <label>Estado
+        <input name="estado" value="Fim de vida">
+    </label>
+    <label>Motorização
+        <input name="motorizacao" list="listaMotorizacao" maxlength="30">
+    </label>
+    <label>Combustível
+        <input name="combustivel" list="listaCombustivel" maxlength="30">
+    </label>
+    <label>Origem dos dados
+        <select name="origem_dados">
+            <option value="real">real (medido/inspecionado)</option>
+            <option value="exemplo">exemplo (demonstrativo)</option>
+            <option value="referencia_pdf">referência do PDF (hipotético)</option>
+            <option value="nao informado">não informada</option>
+        </select>
+    </label>
+    <label>Fonte da composição
+        <select name="fonte_composicao">
+            <option value="por_peca">por peça (JSON)</option>
+            <option value="agregada">agregada (global do veículo)</option>
+        </select>
+    </label>
+    <label data-so-adicionar>
+        <input type="checkbox" name="copiar_inventario" checked>
+        Copiar o inventário do modelo base (entra como valor de referência, a confirmar na inspeção)
+    </label>
+</fieldset>
+
+                <fieldset class="ModalComponentes" data-entidade="componentes" hidden disabled>
+                    <label>Veículo
+                        <select name="veiculo_id" required></select>
+                    </label>
+                    <label>Categoria
+                        <input name="categoria" placeholder="Bateria, pneus, fluidos..." required>
+                    </label>
+                    <label>Peso (kg)
+                        <input type="number" name="peso_kg" min="0" step="any" required>
+                    </label>
+                    <label>Origem da massa
+                        <select name="massa_origem">
+                            <option value="nao informado">não informada</option>
+                            <option value="referencia">referência</option>
+                            <option value="medido">medido</option>
+                            <option value="estimado">estimado</option>
+                            <option value="fornecedor">fornecedor</option>
+                        </select>
+                    </label>
+                    <label>Código da peça
+                        <input name="codigo_peca" maxlength="60">
+                    </label>
+                    <label>Fornecedor
+                        <input name="fornecedor" maxlength="100">
+                    </label>
+                    <p class="Nota">A composição por material desta peça é editada em
+                        <a href="{{url_for('InventarioPagina')}}">Inventário</a>.</p>
+                </fieldset>
+
+                <fieldset class="ModalMateriais" data-entidade="materiais" hidden disabled>
+                    <label>Peça
+                        <select name="peca_id" required></select>
+                    </label>
+                    <label>Categoria
+                        <input name="categoria" placeholder="Aço, alumínio, plásticos..." list="listaCatalogo" required>
+                    </label>
+                    <label>Peso (kg)
+                        <input type="number" name="peso_kg" min="0" step="any" required>
+                    </label>
+                </fieldset>
+
+                <p class="ModalMensagem" id="modalMensagem" role="status"></p>
+
+                <div class="ModalAcoes">
+                    <button type="button" class="BtnCancelar" data-fechar>Fechar</button>
+                    <button type="submit" class="BtnConfirmar" id="btnConfirmar"></button>
+                </div>
+
+                <!-- Sugestões (o usuário ainda pode digitar outro valor) -->
+                <datalist id="listaCatalogo"></datalist>
+                <datalist id="listaMotorizacao">
+                    <option value="Combustão interna">
+                    <option value="Híbrido">
+                    <option value="Elétrico">
+                </datalist>
+                <datalist id="listaCombustivel">
+                    <option value="Flex">
+                    <option value="Gasolina">
+                    <option value="Etanol">
+                    <option value="Diesel">
+                </datalist>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

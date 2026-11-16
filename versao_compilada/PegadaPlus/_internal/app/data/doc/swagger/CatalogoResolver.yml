@@ -1,0 +1,12 @@
+tags:
+  - Catálogo
+summary: "Consulta (sem criar) o material que corresponde a um texto livre"
+parameters:
+  - name: nome
+    in: query
+    required: false
+    type: string
+    description: "texto a resolver"
+responses:
+  200:
+    description: "encontrado=true/false e o material"

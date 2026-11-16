@@ -1,0 +1,46 @@
+tags:
+- Componentes (peças)
+summary: Edita um componente
+consumes: &id001
+- application/json
+produces: *id001
+parameters:
+- name: peca_id
+  in: path
+  required: true
+  type: integer
+  description: ID do componente
+- name: body
+  in: body
+  required: true
+  description: Envie só os campos que quer alterar
+  schema:
+    type: object
+    properties:
+      veiculo_id:
+        type: integer
+        example: 1
+      categoria:
+        type: string
+        example: Motor
+      peso_kg:
+        type: number
+        example: 120.5
+responses:
+  200:
+    description: Componente atualizado
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+  400:
+    description: Dados inválidos
+    schema: &id002
+      type: object
+      properties:
+        erro:
+          type: string
+  404:
+    description: Componente não encontrado
+    schema: *id002

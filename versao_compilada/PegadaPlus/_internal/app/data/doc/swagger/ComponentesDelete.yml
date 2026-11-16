@@ -1,0 +1,30 @@
+tags:
+- Componentes (peças)
+summary: Remove um componente
+produces:
+- application/json
+parameters:
+- name: peca_id
+  in: path
+  required: true
+  type: integer
+  description: ID do componente
+responses:
+  200:
+    description: Removido
+    schema:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+  400:
+    description: Erro ao remover
+    schema: &id001
+      type: object
+      properties:
+        erro:
+          type: string
+  404:
+    description: Componente não encontrado
+    schema: *id001

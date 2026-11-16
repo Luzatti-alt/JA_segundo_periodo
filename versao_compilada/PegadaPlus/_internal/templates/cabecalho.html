@@ -1,0 +1,11 @@
+{# Cabeçalho único: inclua com {% include 'cabecalho.html' %}. A página atual é marcada por request.endpoint. #}
+{% set itens = [('Home', 'Início'), ('Dados', 'Dados'), ('QRLista', 'QRs'), ('CatalogoPagina', 'Catálogo'),
+                ('InventarioPagina', 'Inventário'), ('Calculos', 'Cálculos')] %}
+<header class="CabecalhoSite">
+    <a class="Marca" href="{{ url_for('Home') }}">Pegada<span>+</span></a><!-- nome placeholder -->
+    <nav aria-label="Principal">
+        {% for endpoint, rotulo in itens %}
+        <a href="{{ url_for(endpoint) }}"{% if request.endpoint == endpoint or (endpoint == 'QRLista' and request.endpoint == 'QRGeradoPagina') %} aria-current="page"{% endif %}>{{ rotulo }}</a>
+        {% endfor %}
+    </nav>
+</header>

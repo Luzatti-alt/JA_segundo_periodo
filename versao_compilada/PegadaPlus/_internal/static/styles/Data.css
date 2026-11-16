@@ -1,0 +1,62 @@
+main > section {
+    scroll-margin-top: 5rem;
+}
+#invBanner {
+    padding: .6rem .8rem;
+    background: var(--superficie-2);
+    border-left: 3px solid var(--acento);
+    border-radius: 0 6px 6px 0;
+}
+#linkCalculo {
+    margin-left: .5rem;
+}
+#btnNovaPeca, #btnNovoModComp, #btnNovoCat {
+    margin-top: .25rem;
+}
+
+.ComposicaoLinhas {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    margin-bottom: .5rem;
+}
+.ComposicaoItem {
+    display: grid;
+    grid-template-columns: minmax(10rem, 2fr) minmax(5rem, 1fr) minmax(9rem, 1.2fr) auto;
+    gap: .5rem;
+    align-items: center;
+    padding: .6rem;
+    background: var(--superficie-2);
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+}
+.ComposicaoItem small {
+    grid-column: 1 / -1;
+    color: var(--texto-suave);
+}
+.ComposicaoItem small:empty {
+    display: none;
+}
+#pecaComposicao > div:last-child, #modCompComposicao > div:last-child {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+/* tabela editável de itens especiais */
+#tabEspeciais td input, #tabEspeciais td select {
+    padding: .3rem .5rem;
+    min-width: 5rem;
+}
+#tabEspeciais td:first-child input {
+    min-width: 11rem;
+}
+
+@media (max-width: 600px) {
+    .ComposicaoItem {
+        grid-template-columns: 1fr 1fr;
+    }
+    .ComposicaoItem input[type="text"] {
+        grid-column: 1 / -1;
+    }
+}

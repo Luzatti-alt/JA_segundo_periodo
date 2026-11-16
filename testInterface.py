@@ -669,11 +669,11 @@ def main():
         traceback.print_exc()
         checar("execução sem exceção", False)
     finally:
-        try:
-            if achar("/Veiculo", chassi=V_CHASSI) or achar("/VeiculoModelo", veiculo=V_VEICULO):
-                teste_remover()               # remoção também é testada pela tela
-        except Exception:
-            traceback.print_exc()
+        #try:
+            #if achar("/Veiculo", chassi=V_CHASSI) or achar("/VeiculoModelo", veiculo=V_VEICULO):
+                #teste_remover()               # remoção também é testada pela tela
+        #except Exception:
+            #traceback.print_exc()
         limpar_restos()                       # garante estado limpo mesmo se algo falhou
 
     print("\n================ RESUMO ================")

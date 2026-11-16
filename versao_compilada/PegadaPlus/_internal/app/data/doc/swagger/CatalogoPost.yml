@@ -1,0 +1,11 @@
+tags:
+  - Catálogo
+summary: "Cria categoria (nome, aliases, grupos {esquema: grupo}, status, processos, unidade_ref, descricao)"
+parameters: []
+responses:
+  201:
+    description: "Material criado"
+  409:
+    description: "Nome ou alias já existente"
+  400:
+    description: "Dados inválidos"

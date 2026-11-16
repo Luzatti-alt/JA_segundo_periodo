@@ -1,0 +1,26 @@
+tags:
+- QR Code
+summary: Imagem PNG do QR Code
+produces:
+- image/png
+parameters:
+- name: qr_id
+  in: path
+  required: true
+  type: integer
+  description: ID do QR
+- name: baixar
+  in: query
+  type: string
+  enum:
+  - '1'
+  - 'true'
+  - sim
+  description: Força download como anexo
+responses:
+  200:
+    description: Imagem PNG
+    schema:
+      type: file
+  404:
+    description: QR não encontrado

@@ -1,0 +1,79 @@
+tags:
+  - Composição do veículo
+summary: Substituir a composição agregada de um veículo
+description: Substitui todos os itens da composição global. Envie uma lista vazia em itens para remover a composição cadastrada. A soma das massas e as referências ao catálogo são validadas pelo sistema.
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  - name: veiculo_id
+    in: path
+    type: integer
+    required: true
+    description: ID do veículo.
+  - name: body
+    in: body
+    required: true
+    description: Nova composição agregada.
+    schema:
+      type: object
+      required:
+        - itens
+      properties:
+        itens:
+          type: array
+          items:
+            type: object
+            properties:
+              material_id:
+                type: integer
+                nullable: true
+                description: ID do material no catálogo, quando identificado.
+              categoria:
+                type: string
+                nullable: true
+                description: Nome/categoria textual quando não houver material_id.
+              massa_kg:
+                type: number
+                minimum: 0
+              origem:
+                type: string
+                description: Origem da massa conforme Inventario.ORIGENS_MASSA.
+              fonte:
+                type: string
+                maxLength: 100
+                nullable: true
+responses:
+  200:
+    description: Composição salva.
+    schema:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        alertas:
+          type: array
+          items:
+            type: string
+        indicadores:
+          type: object
+          description: Indicadores atualizados do inventário do veículo.
+  400:
+    description: Dados inválidos ou erros de validação da composição.
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string
+        erros:
+          type: array
+          items:
+            type: string
+  404:
+    description: Veículo não encontrado.
+    schema:
+      type: object
+      properties:
+        erro:
+          type: string

@@ -1,0 +1,14 @@
+tags:
+  - Componentes
+summary: "Um componente com composição e indicadores"
+parameters:
+  - name: peca_id
+    in: path
+    required: true
+    type: integer
+    description: "id da peça"
+responses:
+  200:
+    description: "Componente"
+  404:
+    description: "Não encontrado"

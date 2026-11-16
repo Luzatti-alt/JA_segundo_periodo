@@ -1,0 +1,16 @@
+tags:
+  - Catálogo
+summary: "Edita categoria; aliases e grupos enviados substituem os atuais"
+parameters:
+  - name: material_id
+    in: path
+    required: true
+    type: integer
+    description: "id do material"
+responses:
+  200:
+    description: "Material atualizado"
+  409:
+    description: "Conflito de nome/alias"
+  404:
+    description: "Não encontrado"

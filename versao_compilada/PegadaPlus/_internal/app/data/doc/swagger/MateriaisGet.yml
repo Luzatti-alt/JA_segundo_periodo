@@ -1,0 +1,21 @@
+tags:
+- Materiais
+summary: Lista todos os materiais
+produces:
+- application/json
+responses:
+  200:
+    description: Lista de materiais
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          peca_id:
+            type: integer
+          categoria:
+            type: string
+          peso kg:
+            type: number

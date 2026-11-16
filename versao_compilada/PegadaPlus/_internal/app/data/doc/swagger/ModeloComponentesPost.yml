@@ -1,0 +1,14 @@
+tags:
+  - Modelos
+summary: "Cria componente de referência (categoria, massa_ref_kg, composicao_ref, codigo_peca, fornecedor)"
+parameters:
+  - name: modelo_id
+    in: path
+    required: true
+    type: integer
+    description: "id do modelo"
+responses:
+  201:
+    description: "Criado"
+  400:
+    description: "Validação da composição"

@@ -1,0 +1,25 @@
+tags:
+- Componentes (peças)
+summary: Lista todos os componentes
+produces:
+- application/json
+responses:
+  200:
+    description: Lista de componentes
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+          id do veiculo:
+            type: integer
+          veiculo_id:
+            type: integer
+          modelo veiculo da peca:
+            type: string
+          categoria:
+            type: string
+          peso kg:
+            type: number

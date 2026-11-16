@@ -1,0 +1,43 @@
+tags:
+- Atividade do veículo
+summary: Salva os parâmetros de atividade do veículo
+consumes: &id001
+- application/json
+produces: *id001
+parameters:
+- name: veiculo_id
+  in: path
+  required: true
+  type: integer
+  description: ID do veículo
+- name: body
+  in: body
+  required: true
+  description: Somente chaves existentes em ATIVIDADE_PADRAO são aplicadas
+  schema:
+    type: object
+    properties: {}
+    additionalProperties:
+      type: number
+    description: Parâmetros de atividade (chaves definidas em ATIVIDADE_PADRAO). Valores numéricos >=
+      0.
+    example: {}
+responses:
+  200:
+    description: Salvo
+    schema:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+  400:
+    description: Valor inválido ou negativo
+    schema: &id002
+      type: object
+      properties:
+        erro:
+          type: string
+  404:
+    description: Veículo não encontrado
+    schema: *id002

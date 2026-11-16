@@ -1,0 +1,25 @@
+tags:
+- Modelos de veículo
+summary: Remove um modelo de veículo
+description: Os veículos ligados ao modelo permanecem, apenas perdem o modelo_id.
+produces:
+- application/json
+parameters:
+- name: modelo_id
+  in: path
+  required: true
+  type: integer
+  description: ID do modelo
+responses:
+  204:
+    description: Removido (sem corpo)
+  400:
+    description: Erro ao remover
+    schema: &id001
+      type: object
+      properties:
+        erro:
+          type: string
+  404:
+    description: Modelo não encontrado
+    schema: *id001

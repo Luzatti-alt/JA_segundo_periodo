@@ -1,0 +1,18 @@
+tags:
+- QR Code
+summary: Baixa o PDF do relatório do QR (rota que o QR aponta)
+produces:
+- application/pdf
+parameters:
+- name: qr_id
+  in: path
+  required: true
+  type: integer
+  description: ID do QR
+responses:
+  200:
+    description: Arquivo PDF
+    schema:
+      type: file
+  404:
+    description: QR/relatório não encontrado
